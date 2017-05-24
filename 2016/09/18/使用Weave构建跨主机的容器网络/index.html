@@ -1,0 +1,358 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>使用Weave构建跨主机的容器网络 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="使用Weave构建跨主机的容器网络"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-09-18T13:44:14.000Z"><a href="/2016/09/18/使用Weave构建跨主机的容器网络/">2016-09-18</a></time>
+        
+  
+    <h1 class="title">使用Weave构建跨主机的容器网络</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#安装Weave"><span class="toc-text">安装Weave</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#设置Weave"><span class="toc-text">设置Weave</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#测试连接"><span class="toc-text">测试连接</span></a></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>当容器分布在多个不同的主机上时，这些容器之间的相互通信变得复杂起来。容器在不同主机之间都使用的是自己的私有IP地址，不同主机的容器之间进行通讯需要将主机的端口映射到容器的端口上，而且IP地址需要使用主机的IP地址。Weave正是为了解决这个问题而出现的，它把不同主机上容器互相连接的网络虚拟成一个类似于本地网络的网络。</p>
+<a id="more"></a>
+<p>如果您了解SDN技术或者部署过OpenStack的网络模块（Neutron）的话，这里通过Weave构建的网络与它们比较类似。它是在一个网络的基础上，构建了一层由软件定义的网络层，这个网络看起来就像是一个本地的局域网，但是实际上它的底层通过另一个网络进行通信。这个网络可能会比实际物理局域网的可靠性要差一些，但是从可用性角度来看，它带来了很大的便利性：你可以在位于不同位置的节点之间通信，而好像它们在一个地方一样。你也可以把这种网络想象成一个类似于VPN似的东西。<br>对于Docker容器来说，这种网络可以将不同主机上的容器连接起来，正如将不同网络下的主机连接起来一样。这样做就无需计划在单台主机上可以容纳的容器数量。下图展示了一个典型的Weave网络的概览：<br><img src="/2016/09/18/使用Weave构建跨主机的容器网络/1.png" alt="“一个典型的Weave网络”" title="“一个典型的Weave网络”"><br>上图中，主机1和主机3并没有直接的网络连接。但是这三个主机内部的容器之间可以通过Weave网络进行通信，就好像它们在一台主机的本地网络上一样。Weave网络并不开放到公有网络上，只有在Weave网络下启动的容器才可以访问。<br>下面我们演示一下如何通过<a href="https://www.weave.works/" target="_blank" rel="external">Weave</a>构建前面提到的这种网络。</p>
+<h3 id="安装Weave"><a href="#安装Weave" class="headerlink" title="安装Weave"></a>安装Weave</h3><p>Weave就是一个可执行的shell脚本文件。可以将其下载到所有需要加入Weave网络的主机上，然后更改其文件属性，使其变为可执行：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ sudo curl -L git.io/weave -o /usr/<span class="built_in">local</span>/bin/weave</div><div class="line">$ sudo chmod +x /usr/<span class="built_in">local</span>/bin/weave</div></pre></td></tr></table></figure></p>
+<h3 id="设置Weave"><a href="#设置Weave" class="headerlink" title="设置Weave"></a>设置Weave</h3><p>本示例使用了两台主机，两台主机的主机名分别为centos7-A和centos7-B，ip地址分别为192.168.71.167和192.168.71.168。确保这两台主机之间可以正常通信（可以ping通）。如果在实践这个技术时遇到问题，很有可能是防火墙阻挡了Weave的通信，所以需要防火墙打开TCP和UDP的6783端口。<br>在第一台主机上，可以先启动第一个Weave route：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7-A ~]$ sudo /usr/<span class="built_in">local</span>/bin/weave launch</div><div class="line">...</div><div class="line">[yangdong@centos7-A ~]$ docker ps</div><div class="line">CONTAINER ID        IMAGE                        COMMAND                  CREATED             STATUS              PORTS               NAMES</div><div class="line">becc8de53d1a        weaveworks/plugin:1.6.1      <span class="string">"/home/weave/plugin"</span>     22 seconds ago      Up 20 seconds                           weaveplugin</div><div class="line">6a2f7a53e5ac        weaveworks/weaveexec:1.6.1   <span class="string">"/home/weave/weavepro"</span>   31 seconds ago      Up 30 seconds                           weaveproxy</div><div class="line">1<span class="built_in">fc</span>72da07340        weaveworks/weave:1.6.1       <span class="string">"/home/weave/weaver -"</span>   36 seconds ago      Up 35 seconds                           weave</div><div class="line">[yangdong@centos7-A ~]$ C=$(sudo /usr/<span class="built_in">local</span>/bin/weave run 10.0.1.2/24 -it ubuntu:14.04)</div><div class="line">[yangdong@centos7-A ~]$ docker ps</div><div class="line">CONTAINER ID        IMAGE                        COMMAND                  CREATED             STATUS              PORTS               NAMES</div><div class="line">0a43860f4660        ubuntu:14.04                 <span class="string">"/bin/bash"</span>              2 minutes ago       Up 2 minutes                            nauseous_kilby</div><div class="line">becc8de53d1a        weaveworks/plugin:1.6.1      <span class="string">"/home/weave/plugin"</span>     7 minutes ago       Up 7 minutes                            weaveplugin</div><div class="line">6a2f7a53e5ac        weaveworks/weaveexec:1.6.1   <span class="string">"/home/weave/weavepro"</span>   7 minutes ago       Up 7 minutes                            weaveproxy</div><div class="line">1<span class="built_in">fc</span>72da07340        weaveworks/weave:1.6.1       <span class="string">"/home/weave/weaver -"</span>   7 minutes ago       Up 7 minutes                            weave</div></pre></td></tr></table></figure></p>
+<p>上述第1行命令运行weave脚本启动了Weave，如果是第一次运行，该脚本会下载Weave相关的docker镜像。第3行命令确认了Weave正常启动，实质上是启动了3个Weave容器。第8行命令在一个容器内启动了Weave router。通过命令行参数提供的IP地址和CIDR网络掩码，指定了Weave网络使用的IP地址和子网。此行命令将容器的标识符ID存入了变量C中，以便于后面进行引用。第9行命令确认了通过Weave命令启动的ubuntu容器的正常运行。<br>下面我们在第二台主机centos7-B上进行类似的步骤，但是需要告诉Weave第一台主机的IP地址，而且需要给第二个容器指定一个相同子网中的不同IP地址：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7-B ~]$ sudo /usr/<span class="built_in">local</span>/bin/weave launch 192.168.71.167</div><div class="line">[yangdong@centos7-B ~]$ C=$(sudo /usr/<span class="built_in">local</span>/bin/weave run 10.0.1.3/24 -it ubuntu:14.04)</div></pre></td></tr></table></figure></p>
+<p>上述命令告诉Weave它应该与centos7-A连接，所以在启动时通过参数给出了centos7-A的IP地址。另外，在启动ubuntu容器时指定了与第一个容器相同子网内的不同IP。</p>
+<h3 id="测试连接"><a href="#测试连接" class="headerlink" title="测试连接"></a>测试连接</h3><p>现在在两台主机上都设置好了Weave网络，下面测试一下这两个不同主机上的容器是否能互相访问：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7-A ~]$ docker attach <span class="variable">$C</span></div><div class="line">root@0a43860f4660:/<span class="comment"># ping 10.0.1.3</span></div><div class="line">PING 10.0.1.3 (10.0.1.3) 56(84) bytes of data.</div><div class="line">64 bytes from 10.0.1.3: icmp_seq=1 ttl=64 time=5.43 ms</div><div class="line">64 bytes from 10.0.1.3: icmp_seq=2 ttl=64 time=0.808 ms</div><div class="line">64 bytes from 10.0.1.3: icmp_seq=3 ttl=64 time=1.29 ms</div><div class="line">^C</div><div class="line">--- 10.0.1.3 ping statistics ---</div><div class="line">3 packets transmitted, 3 received, 0% packet loss, time 2003ms</div><div class="line">rtt min/avg/max/mdev = 0.808/2.513/5.435/2.075 ms</div><div class="line"></div><div class="line">[yangdong@centos7-B ~]$ docker attach <span class="variable">$C</span></div><div class="line">root@06373ddc56a1:/<span class="comment"># ping 10.0.1.2</span></div><div class="line">PING 10.0.1.2 (10.0.1.2) 56(84) bytes of data.</div><div class="line">64 bytes from 10.0.1.2: icmp_seq=1 ttl=64 time=13.8 ms</div><div class="line">64 bytes from 10.0.1.2: icmp_seq=2 ttl=64 time=0.721 ms</div><div class="line">64 bytes from 10.0.1.2: icmp_seq=3 ttl=64 time=0.761 ms</div><div class="line">^C</div><div class="line">--- 10.0.1.2 ping statistics ---</div><div class="line">3 packets transmitted, 3 received, 0% packet loss, time 2004ms</div><div class="line">rtt min/avg/max/mdev = 0.721/5.099/13.815/6.163 ms</div></pre></td></tr></table></figure></p>
+<p>如果可以ping通，说明在你自己指定的子网中，两个容器是可以跨主机连接的。这样就可以在多台不同的主机上启动容器，但这些容器的网络好像连接在一个本地的网络当中。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/Docker/">Docker</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Docker/">Docker</a>, <a href="/tags/Weave/">Weave</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/09/18/使用Weave构建跨主机的容器网络/" data-title="使用Weave构建跨主机的容器网络" data-url="https://andyyoung01.github.io/2016/09/18/使用Weave构建跨主机的容器网络/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

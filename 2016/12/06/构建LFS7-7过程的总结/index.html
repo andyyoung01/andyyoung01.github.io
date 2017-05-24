@@ -1,0 +1,357 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>构建LFS7.7过程的总结 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="构建LFS7.7过程的总结"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-12-06T13:14:27.000Z"><a href="/2016/12/06/构建LFS7-7过程的总结/">2016-12-06</a></time>
+        
+  
+    <h1 class="title">构建LFS7.7过程的总结</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#构建准备"><span class="toc-text">构建准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#构建工具链"><span class="toc-text">构建工具链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#构建LFS系统"><span class="toc-text">构建LFS系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#让LFS系统可引导"><span class="toc-text">让LFS系统可引导</span></a></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p><a href="http://www.linuxfromscratch.org/" target="_blank" rel="external">Linux From Scratch</a>旨在帮助用户更好得理解Linux如何正常运转，里面的程序如何协同工作以及程序之间如何相互依赖的。了解 Linux 系统如何工作的关键就是知道每个软件包的作用以及为什么你（或系统）需要它。本文总结了构建LFS 7.7-systemd的注意事项，而不是对构建过程中使用的命令进行记录。</p>
+<a id="more"></a>
+<h3 id="构建准备"><a href="#构建准备" class="headerlink" title="构建准备"></a>构建准备</h3><p>要进行LFS的构建，用户需要对Linux系统有一定的了解，不然会在构建过程中遇到各种各样的问题。<br>构建LFS 7.7-systemd的宿主系统需要满足一定<a href="https://linux.cn/lfs/LFS-BOOK-7.7-systemd/prologue/hostreqs.html" target="_blank" rel="external">需求</a>，我构建的过程使用的宿主机是CentOS7（内核版本3.10.0-327.36.3）的VMware Workstation 12.0虚拟机，使用version-check.sh脚本检查后，建立了指向/usr/bin/bison的名为/usr/bin/yacc的软链接，其它工具基本满足构建所需。<br>在分区时，根据书中第二章的要求在虚拟机上添加了一个的硬盘，VMware虚拟机添加硬盘时默认为SCSI硬盘，根据第八章编译内核使用的默认选项和GRUB的配置，不能正常启动系统，主要的原因可能是内核编译参数的配置没有对或缺少某些主要驱动程序所导致的。后面再来看解决方法。<br>分区完成后，在新的分区创建了ext4类型的文件系统。然后挂载新分区，设置$LFS变量。然后根据第三章下载软件包和补丁。<br>第四章在宿主机添加了lfs普通用户以降低编译过程中可能导致的风险，对该用户的环境进行了设置，主要目的是设置该用户独有的环境变量，不使用宿主机原有的环境变量。</p>
+<h3 id="构建工具链"><a href="#构建工具链" class="headerlink" title="构建工具链"></a>构建工具链</h3><p>第五章构建了用于构建LFS系统使用的工具链。其中的Binutils和GCC都构建了两遍，这主要是为了解决循环依赖的问题：因为需要一个编译器来编译一个编译器。<br>构建过程的第一步是构建一个宿主系统无关的新工具链，它是通过先安装交叉编译的Binutils和GCC，使用它们编译glibc等库，然后第二遍编译Binutils和GCC，这次它们被链接到刚才编译好的glibc等库上。这样与宿主系统无关的新工具链就构建成功了。其中5.2节<a href="https://linux.cn/lfs/LFS-BOOK-7.7-systemd/chapter05/toolchaintechnotes.html" target="_blank" rel="external">工具链技术备注</a>解释了一些基本原理和技术细节，需要重点理解。<br>第二步使用这个第二遍编译好的工具链，构建其它剩下的基础工具。<br>第五章编译的工具都安装在$LFS/tools目录中，这些工具可以用来构建第六章的正式的LFS系统。</p>
+<h3 id="构建LFS系统"><a href="#构建LFS系统" class="headerlink" title="构建LFS系统"></a>构建LFS系统</h3><p>第六章的前几节目的是准备一个虚拟环境，这个环境通过执行chroot命令进入，从而可以方便地在宿主机和LFS虚拟chroot环境中进行切换。同时本章也介绍了各种不同的包管理器的实现。后面很大的篇幅是具体编译每个软件使用的命令和每个软件包包含的大概内容。最后本章介绍了如何剥离可执行程序中的调试符号，从而使可执行文件的大小减小很多。<br>第七章对系统进行了简单的配置，先是网络包括主机名，ip地址，主机名，DNS解析，hosts表等。之后介绍了系统设备的管理（由于这部分比较接近于硬件，我对于这部分的理解还很浅），配置了时间区域等内容，然后创建了/etc/inputrc和/etc/shells文件。</p>
+<h3 id="让LFS系统可引导"><a href="#让LFS系统可引导" class="headerlink" title="让LFS系统可引导"></a>让LFS系统可引导</h3><p>第八章首先创建了/etc/fstab文件，系统启动后会根据此文件的内容挂载根文件系统。然后就是编译内核和配置GRUB了。根据书中<code>make defconfig</code>命令创建了默认的.config文件，选择了书中建议的内核选项后，系统仍然无法启动，无法挂载根文件系统。<br>由于宿主机的内核可以正常启动虚拟机，所以该内核中包含的驱动可以识别虚拟机的SCSI硬盘，于是便想到直接使用宿主机的内核来启动系统。宿主机的/boot分区是独立的。此分区只包含内核及GRUB相关的文件，可以修改GRUB的配置，待内核启动完成后挂载LFS的分区即可，下面是操作过程：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">[root@centos7 ~]# cd /boot/</div><div class="line">[root@centos7 boot]# cp vmlinuz-3.10.0-327.36.3.el7.x86_64 vmlinuz-3.10.0-327.36.3.lfs-7.7-systemd.x86_64</div><div class="line">[root@centos7 boot]# cp System.map-3.10.0-327.36.3.el7.x86_64 System.map-3.10.0-327.36.3.lfs-7.7-systemd.x86_64</div><div class="line">[root@centos7 boot]# dracut -v --filesystems &quot;ext4&quot; initramfs-3.10.0-327.36.3.lfs-7.7-systemd.img 3.10.0-327.36.3.el7.x86_64</div><div class="line">...</div><div class="line">[root@centos7 boot]# cp /lib/modules/3.10.0-327.36.3.el7.x86_64/ /mnt/lfs/lib/modules/3.10.0-327.36.3.lfs-7.7-systemd.x86_64/</div></pre></td></tr></table></figure></p>
+<p>上面的第2、3行命令分别复制当前宿主机的内核和map文件，重命名用于我们的LFS系统；<br>第4行命令使用CentOS系统自带的dracut命令制作<a href="http://www.linuxfromscratch.org/blfs/view/systemd/postlfs/initramfs.html" target="_blank" rel="external">initramfs</a>文件，在此文件中包含可以识别ext4文件系统的模块，以便能正确读出LFS硬盘分区上的文件。dracut命令的详细用法可以参考<a href="http://linux.vbird.org/linux_basic/0510osloader.php#grub_initrd" target="_blank" rel="external">鸟哥的私房菜</a>；<br>第6行命令将与宿主机内核相关的模块也全部复制到LFS分区上。<br>最后是修改grub.cfg文件，来添加一个启动菜单选项，来使用刚才我们复制的内核文件及<a href="http://www.linuxfromscratch.org/blfs/view/systemd/postlfs/initramfs.html" target="_blank" rel="external">initramfs</a>文件。详细的GRUB2的设定也参考<a href="http://linux.vbird.org/linux_basic/0510osloader.php#grub_menulist" target="_blank" rel="external">鸟哥grub2设定</a>，可以先使用<code>grub2-mkconfig</code>命令生成新的grub.cfg文件，然后修改包含刚才复制的内核文件名称的菜单项，最后的菜单项为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">menuentry &apos;LFS (3.10.0-327.36.3.el7.x86_64) 7.7-systemd&apos; --class centos --class gnu-linux --class gnu --class os --unrestricted $menuentry_id_option &apos;gnulinux-3.10.0-327.36.3.el7.x86_64-advanced-024f0010-39fa-472e-b2b0-fda255b4a8a3&apos; &#123;</div><div class="line">        load_video</div><div class="line">        set gfxpayload=keep</div><div class="line">        insmod gzio</div><div class="line">        insmod part_msdos</div><div class="line">        insmod xfs</div><div class="line">        set root=&apos;hd0,msdos1&apos;</div><div class="line">        linux16 /vmlinuz-3.10.0-327.36.3.lfs-7.7-systemd.x86_64 root=/dev/sdc1 ro</div><div class="line">        initrd16 /initramfs-3.10.0-327.36.3.lfs-7.7-systemd.img</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>另外，也可以按照<a href="https://linux.cn/lfs/LFS-BOOK-7.7-systemd/chapter08/kernel.html" target="_blank" rel="external">LFS8.3.1</a>的建议，可以拷贝主机系统的内核配置文件 .config（如果有的话）到解压后的 linux-3.19 目录下来跳过内核配置（使用<code>make oldconfig</code>命令），再编译内核。不过最后仍然需要制作initramfs文件来辅助启动。如何编译内核可以参考<a href="http://linux.vbird.org/linux_basic/0540kernel.php" target="_blank" rel="external">鸟哥核心编译</a>一章。<br>最后，别忘记根据第九章的说明，配置<code>/etc/os-release</code>文件，缺少了该文件，系统仍然无法正常启动！经过以上操作后，LFS系统便可以通过与宿主机完全相同的内核来进行启动，不会出现无法识别硬盘，无法识别ext4分区的现象。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/Linux/">Linux</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Linux/">Linux</a>, <a href="/tags/LFS/">LFS</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/12/06/构建LFS7-7过程的总结/" data-title="构建LFS7.7过程的总结" data-url="https://andyyoung01.github.io/2016/12/06/构建LFS7-7过程的总结/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

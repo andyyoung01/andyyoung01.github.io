@@ -1,0 +1,385 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Apache Mesos(5)-初步认识Marathon | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Apache Mesos(5)-初步认识Marathon"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-08-01T13:57:42.000Z"><a href="/2016/08/01/Apache-Mesos-5-初步认识Marathon/">2016-08-01</a></time>
+        
+  
+    <h1 class="title">Apache Mesos(5)-初步认识Marathon</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#探索web界面和API"><span class="toc-text">探索web界面和API</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#服务发现和路由"><span class="toc-text">服务发现和路由</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Mesos-DNS"><span class="toc-text">Mesos-DNS</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Marathon-lb"><span class="toc-text">Marathon-lb</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#haproxy-marathon-bridge"><span class="toc-text">haproxy-marathon-bridge</span></a></li></ol></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>前面我们已经部署了Mesos的集群，但还没有使用Mesos集群真正得部署应用程序来使用整个集群的资源，现在我们来认识一下Marathon框架，下篇文章使用Marathon在Mesos集群上来实际部署几个应用程序。我们在本篇文章中也对Mesos和Marathon生态系统中的服务发现和路由进行了介绍。</p>
+<a id="more"></a>
+<p>如果将Mesos类比为操作系统的内核，则Marathon可以类比为服务管理系统，在Linux中通常是<em>init</em>，<em>systemd</em>或<em>upstart</em>等系统。Marathon将应用程序部署为长时间运行的Mesos任务。它可以被认为是一种私有的可以部署应用程序的Platform as a service（PaaS）。<br><img src="/2016/08/01/Apache-Mesos-5-初步认识Marathon/1.png" alt="“Marathon启动应用程序作为长时间运行的Mesos任务”" title="“Marathon启动应用程序作为长时间运行的Mesos任务”"><br>Marathon可以让您指定每个应用程序实例需要的资源以及要运行此程序需要多少实例。它可以使用可用的集群资源对失败的任务自动做出响应。如果某个Mesos slave当机或应用的某个实例退出、失败，Marathon将会自动启动一个新的实例，来替换掉失败的实例。Marathon也允许用户在部署时指定应用程序彼此间的依赖关系，这样就可以保证某个应用程序实例不会在它依赖的数据库实例启动前启动。</p>
+<h3 id="探索web界面和API"><a href="#探索web界面和API" class="headerlink" title="探索web界面和API"></a>探索web界面和API</h3><p>Marathon提供了一个直观的web界面，可以用来管理应用程序和观察部署的状态，如下图所示：<br><img src="/2016/08/01/Apache-Mesos-5-初步认识Marathon/2.png" alt="“Marathon的web界面概览”" title="“Marathon的web界面概览”"></p>
+<blockquote>
+<p>关于Web UI的更多信息可以参考<a href="http://mesosphere.github.io/marathon/docs/marathon-ui.html" target="_blank" rel="external">http://mesosphere.github.io/marathon/docs/marathon-ui.html</a>。</p>
+</blockquote>
+<p>虽然web界面对于观察和管理应用程序和部署是非常有帮助的，但却也有不少限制。于是Marathon提供了另外一种管理应用程序的方式，通过Marathon的REST API。<br>鉴于很多组织都开始着手使用持续集成（CI）和持续交付（CD）来自动化他们程序的部署，Marathon的基于JSON的REST的API使部署新程序或者升级程序的版本变得更加灵活方便。<br>下表列举了一些比较重要的以及操作它们所用的HTTP方法。<br><img src="/2016/08/01/Apache-Mesos-5-初步认识Marathon/3.png" alt="“Marathon的一些API”" title="“Marathon的一些API”"></p>
+<blockquote>
+<p>完整的Marathon REST API可以在<a href="https://mesosphere.github.io/marathon/docs/rest-api.html" target="_blank" rel="external">https://mesosphere.github.io/marathon/docs/rest-api.html</a>找到。</p>
+</blockquote>
+<p>后面将会介绍关于使用这些API的实际的例子。下面我们来看看组成应用程序架构的各种不同的服务是怎样彼此通信的，我们将这称为<em>服务发现和路由</em>。</p>
+<h3 id="服务发现和路由"><a href="#服务发现和路由" class="headerlink" title="服务发现和路由"></a>服务发现和路由</h3><p>现代的应用程序通常由多个服务或层次组成的。这些服务需要彼此间能够进行通信。这对于传统的部署方式来说是非常容易的，只需要将service与所在的机器的hostname进行关联，就可以实现不同机器间的service通过hostname彼此通信。然而，在Mesos的世界里，这变得非常困难。因为容器可以运行在集群中任何有可用计算资源的机器上，对于定位某个应用程序实例所在的位置也就相对困难了。</p>
+<blockquote>
+<p>关于Mesos的服务发现机制，可以参考这篇文章<a href="http://www.cnblogs.com/hahp/p/5396302.html" target="_blank" rel="external">Mesos服务发现与负载均衡</a></p>
+</blockquote>
+<p>在Mesos和Marathon的生态系统里，我们将这个问题（也是解决方法）称为<strong>服务发现</strong>。幸运的是，有许多可用的工具来解决服务发现和应用程序的路由问题。目前主要有以下三种选择：</p>
+<ul>
+<li>Mesos-DNS：通过DNS实现服务发现。</li>
+<li>Marathon-lb：使用HAProxy提供基于端口的服务发现。</li>
+<li>haproxy-marathon-bridge (不建议使用)：一个脚本文件，它可以对本地运行的HAProxy进行配置。</li>
+</ul>
+<h4 id="Mesos-DNS"><a href="#Mesos-DNS" class="headerlink" title="Mesos-DNS"></a>Mesos-DNS</h4><p>Mesos-DNS对于每个Mesos任务（包括Marathon应用程序实例）生成一条SRV的记录，并且将这些记录翻译成运行这些应用的机器上的IP地址和端口。如下图所示：<br><img src="/2016/08/01/Apache-Mesos-5-初步认识Marathon/4.png" alt="“Mesos-DNS”" title="“Mesos-DNS”"><br>Mesos-DNS对于以下几种情况是非常有用的：</p>
+<ul>
+<li>应用程序是通过多个Frameworks（不只是Marathon）启动的。</li>
+<li>使用类似于<a href="https://www.projectcalico.org/" target="_blank" rel="external">Project Calico</a>的解决方案。</li>
+<li>在Marathon中使用随机端口分配。</li>
+</ul>
+<blockquote>
+<p>更多信息请参考Mesos-DNS的<a href="http://mesosphere.github.io/mesos-dns/" target="_blank" rel="external">文档和教程</a>。</p>
+</blockquote>
+<h4 id="Marathon-lb"><a href="#Marathon-lb" class="headerlink" title="Marathon-lb"></a>Marathon-lb</h4><p>另一种实现服务发现的方式是在集群中的每个机器上运行一个TCP/HTTP代理，将到本地静态服务端口的链接，透明地转发到某个Marathon应用实例（运行Mesos任务）的动态分配的主机/端口组合上。客户端只需要简单得连接到通常定义的服务端口上，而不需要知道服务发现的实现细节。如果所有的应用是通过Marathon启动的，这种方式足以满足要求。<br>Marathon-lb是一个容器化的应用，它基于HAProxy，包括HAProxy应用程序，和一个使用Marathon的REST的API来生成HAProxy配置的应用。<br><img src="/2016/08/01/Apache-Mesos-5-初步认识Marathon/5.png" alt="“Marathon-lb”" title="“Marathon-lb”"></p>
+<blockquote>
+<p>更多信息请参考<a href="https://github.com/mesosphere/marathon-lb" target="_blank" rel="external">Marathon-lb repository</a>或<a href="https://docs.mesosphere.com/administration/service-discovery-with-marathon-lb/service-discovery-and-load-balancing-with-marathon-lb/" target="_blank" rel="external">marathon-lb documentation on the Mesosphere site</a>。</p>
+</blockquote>
+<h4 id="haproxy-marathon-bridge"><a href="#haproxy-marathon-bridge" class="headerlink" title="haproxy-marathon-bridge"></a>haproxy-marathon-bridge</h4><p>Marathon也提供了一个简单的shell脚本，它使用Marathon的REST的API来创建HAProxy的配置文件。此种方式在Marathon的官方文档中标为不建议使用，对于此种方式，我们不再做过多研究。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/DistributedSystems/">分布式系统</a>, <a href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Apache-mesos/">Apache mesos</a>, <a href="/tags/DistributedSystems/">分布式系统</a>, <a href="/tags/ServiceDiscovery/">服务发现</a>, <a href="/tags/Marathon/">Marathon</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/08/01/Apache-Mesos-5-初步认识Marathon/" data-title="Apache Mesos(5)-初步认识Marathon" data-url="https://andyyoung01.github.io/2016/08/01/Apache-Mesos-5-初步认识Marathon/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

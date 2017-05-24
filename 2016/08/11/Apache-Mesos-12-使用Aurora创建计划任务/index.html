@@ -1,0 +1,395 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Apache Mesos(12)-使用Aurora创建计划任务 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Apache Mesos(12)-使用Aurora创建计划任务"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-08-11T13:07:51.000Z"><a href="/2016/08/11/Apache-Mesos-12-使用Aurora创建计划任务/">2016-08-11</a></time>
+        
+  
+    <h1 class="title">Apache Mesos(12)-使用Aurora创建计划任务</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#管理计划任务"><span class="toc-text">管理计划任务</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#创建Cron任务"><span class="toc-text">创建Cron任务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#创建基于Docker的Cron任务"><span class="toc-text">创建基于Docker的Cron任务</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#管理Aurora"><span class="toc-text">管理Aurora</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#管理用户和配额"><span class="toc-text">管理用户和配额</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#认证"><span class="toc-text">认证</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#授权"><span class="toc-text">授权</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#管理资源配额"><span class="toc-text">管理资源配额</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#进行维护"><span class="toc-text">进行维护</span></a></li></ol></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>Aurora不但可以部署应用程序，还可以创建计划任务。不过与Chronos不同的是，Aurora采用了一种更传统的方式来运行计划任务。它遵循Cron schedule，在其基础上构建。本篇我们就来看看Aurora的计划任务及对Aurora的管理。</p>
+<a id="more"></a>
+<h3 id="管理计划任务"><a href="#管理计划任务" class="headerlink" title="管理计划任务"></a>管理计划任务</h3><p>Aurora的计划任务管理有如下特点：</p>
+<ul>
+<li>自动失败重试 - 如果一个Aurora Cron任务失败，可以自动重试一定的次数，它是由任务的<code>max_task_failures</code>的值决定的。</li>
+<li>冲突策略 - 当一个Cron任务试图启动，但前一个实例还没有完成时，控制调度器的行为。它由设置任务的<code>cron_collision_policy</code>属性的值来控制的。该属性可能的值有KILL_EXISTING或CANCEL_NEW。</li>
+<li>时区支持 - 此全集群的选项是由指定Aurora调度器的选项而不是某个任务的选项决定的。默认值为UTC，可以通过<code>-cron_timezone</code>配置选项设置。</li>
+</ul>
+<blockquote>
+<p>更多信息请参阅<a href="http://aurora.apache.org/documentation/latest/features/cron-jobs/" target="_blank" rel="external">官方文档</a>。</p>
+</blockquote>
+<h4 id="创建Cron任务"><a href="#创建Cron任务" class="headerlink" title="创建Cron任务"></a>创建Cron任务</h4><p>使用Aurora DSL创建计划任务与创建普通任务十分类似，只是加入了一些Cron的属性。下面给出了一个示例，可以发现跟前一篇普通任务的DSL相比较，在job对象里多了<code>cron_schedule</code>属性，如下：<br><figure class="highlight python"><figcaption><span>simple-sleep-cron.aurora</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># simple-sleep-cron.aurora</span></div><div class="line"><span class="comment"># A simple cron job that sleeps for 60 seconds and returns.</span></div><div class="line"><span class="comment"># vim: set ft=python:</span></div><div class="line"></div><div class="line">sleep = Process(</div><div class="line">        name=<span class="string">'simple-sleep'</span>,</div><div class="line">        cmdline=<span class="string">"""</span></div><div class="line">        echo "At the tone the time will be: $(date +'%r %Z')"</div><div class="line">        echo "Sleeping for 60 seconds."</div><div class="line">        sleep 60</div><div class="line">        """</div><div class="line">)</div><div class="line"></div><div class="line">task = Task(</div><div class="line">    processes=[sleep],</div><div class="line">    resources=Resources(cpu=<span class="number">0.1</span>, ram=<span class="number">16</span>*MB, disk=<span class="number">1</span>*MB)</div><div class="line">)</div><div class="line"></div><div class="line">jobs = [</div><div class="line">    Job(</div><div class="line">        cluster=<span class="string">'aurora-cluster'</span>,</div><div class="line">        role=<span class="string">'www-data'</span>,</div><div class="line">        environment=<span class="string">'prod'</span>,</div><div class="line">        name=<span class="string">'simple-sleep'</span>,</div><div class="line">        cron_schedule=<span class="string">'*/5 * * * *'</span>,</div><div class="line">        task=task</div><div class="line">    )</div><div class="line">]</div></pre></td></tr></table></figure></p>
+<p>可以使用下面的命令来提交该计划任务：</p>
+<pre><code>$ aurora cron schedule aurora-cluster/www-data/prod/simple-sleep simple-sleep-cron.aurora
+</code></pre><p>该命令在Aurora的调度器中创建了一个Cron任务，并且根据给定的时间表（每5分钟）执行任务。Aurora也允许使用Aurora命令行客户端在需要时手动执行命令，例如：</p>
+<pre><code>$ aurora cron start aurora-cluster/www-data/prod/simple-sleep
+</code></pre><p>更多的Cron子命令信息，可以通过<code>aurora cron -h</code>查询。    </p>
+<h4 id="创建基于Docker的Cron任务"><a href="#创建基于Docker的Cron任务" class="headerlink" title="创建基于Docker的Cron任务"></a>创建基于Docker的Cron任务</h4><p>Aurora的基于Docker的Cron任务与普通的基于Docker的任务也非常类似，需要在DSL中增加<code>cron_schedule</code>字段。具体示例可以参考<a href="https://github.com/rji/mesos-in-action-code-samples/blob/master/chapter09/daily-weather-cron.aurora" target="_blank" rel="external">daily-weather-cron.aurora</a>。</p>
+<h3 id="管理Aurora"><a href="#管理Aurora" class="headerlink" title="管理Aurora"></a>管理Aurora</h3><p>作为系统管理员，Aurora提供了一种方式来维护用户认证和授权，设置资源定额，甚至可以设置调度策略以便Mesos slave可以安全得下线来进行维护。</p>
+<h4 id="管理用户和配额"><a href="#管理用户和配额" class="headerlink" title="管理用户和配额"></a>管理用户和配额</h4><p>Aurora的一个优点是支持多用户。它使用了Apache Shiro安全框架提供对用户的认证和授权。Shiro允许通过多种数据源进行认证，支持LDAP和Active Directory，而且它的可插拔特性允许用户自己实施一定的安全策略。<br>目前Aurora提供两种认证机制：HTTP Basic Authentication和HTTP SPNEGO Authentication (Kerberos)。</p>
+<h5 id="认证"><a href="#认证" class="headerlink" title="认证"></a>认证</h5><p>这里我们只介绍HTTP Basic Authentication。<br>在Aurora schedule的机器上，需要如下的Schedule命令行参数：</p>
+<pre><code>-http_authentication_mechanism=BASIC
+-shiro_realm_modules=INI_AUTHNZ
+-shiro_ini_path=path/to/security.ini
+</code></pre><p>上面的security.ini文件，类似于：<br><figure class="highlight ini"><figcaption><span>security.ini</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="section">[users]</span></div><div class="line"><span class="attr">sally</span> = apple, admin</div><div class="line"><span class="section"></span></div><div class="line">[roles]</div><div class="line"><span class="attr">admin</span> = *</div></pre></td></tr></table></figure></p>
+<p>在客户端上，需要创建~/.netrc文件，将hostname和认证信息添加进去：<br><figure class="highlight"><figcaption><span>.netrc</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">machine aurora.example.com</div><div class="line">login sally</div><div class="line">password apple</div></pre></td></tr></table></figure></p>
+<h5 id="授权"><a href="#授权" class="headerlink" title="授权"></a>授权</h5><p>在Schedule机器上，可以使用INI配置文件来定义角色及安全控制。首先，需要如下的Schedule命令行参数，如果是CentOS7系统上通过rpm或域名安装的Aurora，可以通过修改/etc/sysconfig/aurora-scheduler文件实现：</p>
+<pre><code>-http_authentication_mechanism=BASIC
+-shiro_ini_path=path/to/security.ini
+</code></pre><p>然后在security.ini文件中添加角色：<br><figure class="highlight ini"><figcaption><span>security.ini</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="section">[users]</span></div><div class="line"><span class="attr">alice</span> = secret, admin</div><div class="line"><span class="attr">bob</span>   = secret, accounting</div><div class="line"><span class="attr">carol</span> = secret</div><div class="line"><span class="section">[roles]</span></div><div class="line"><span class="attr">admin</span>      = *</div><div class="line"><span class="attr">accounting</span> = thirft.AuroraAdmin:setQuota</div></pre></td></tr></table></figure></p>
+<p>上面的配置文件授权了用户Alice（密码为secret）admin角色，Bob（密码为secret）授权了accounting角色，而Carol（密码为secret）没有指定任何角色。</p>
+<h5 id="管理资源配额"><a href="#管理资源配额" class="headerlink" title="管理资源配额"></a>管理资源配额</h5><p>在Aurora中，生产级别的任务允许抢占非生产级别的任务。生产级别的任务可以结束低优先级的非生产任务，如果它需要额外的集群资源的话。这允许在Aurora集群中可以存在多种环境（development，staging，production等）而不会有影响到生产负载的风险。<br>生产任务需要资源配额，可以给该任务保留一定的资源。使用Aurora admin client有两个子命令用于设置和增加配额：</p>
+<pre><code>aurora-admin set_quota &lt;role&gt; &lt;cpus&gt; &lt;mem&gt; &lt;disk&gt;
+aurora-admin increase_quota &lt;role&gt; &lt;cpus&gt; &lt;mem&gt; &lt;disk&gt;
+</code></pre><p>如果设置了认证和授权，使用上面命令的用户必须具有admin角色和accounting角色。<br>作为Aurora用户，可以查询资源配额：</p>
+<pre><code>aurora quota get devcluster/example_role
+</code></pre><h4 id="进行维护"><a href="#进行维护" class="headerlink" title="进行维护"></a>进行维护</h4><p>Aurora中的一个管理功能是对集群中的一组机器进行计划的维护。这允许用户将某台机器置为维护模式，将此节点上的任务重新分配到集群中的其它节点，在进行维护任务后，可以将该机器恢复到普通的服务模式。此功能是通过Aurora admin客户端设置的，包括以下的一些子命令：</p>
+<ul>
+<li>host_deactivate - 将一台机器或一组机器置为维护模式。</li>
+<li>host_drain - 将一台或一组机器上的任务结束，阻止调度器将任何新任务调度到该机器上。</li>
+<li>host_activate - 将一台或一组机器恢复为普通调度模式。</li>
+<li>host_status - 查询一台或一组机器的维护状态信息。</li>
+</ul>
+<p>使用Aurora admin客户端，通过以下格式使用上述子命令：</p>
+<pre><code>$ aurora-admin &lt;subcommand&gt; --hosts=host.example.com[, ...] &lt;cluster_name&gt;
+</code></pre><p>一些子命令还有其它的选项可用。完整的使用信息可通过运行<code>aurora-admin help &lt;subcommand&gt;</code>得到。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/DistributedSystems/">分布式系统</a>, <a href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Apache-mesos/">Apache mesos</a>, <a href="/tags/DistributedSystems/">分布式系统</a>, <a href="/tags/Aurora/">Aurora</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/08/11/Apache-Mesos-12-使用Aurora创建计划任务/" data-title="Apache Mesos(12)-使用Aurora创建计划任务" data-url="https://andyyoung01.github.io/2016/08/11/Apache-Mesos-12-使用Aurora创建计划任务/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

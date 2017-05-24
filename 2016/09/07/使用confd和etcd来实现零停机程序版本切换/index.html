@@ -1,0 +1,363 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>使用confd和etcd来实现零停机程序版本切换 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="使用confd和etcd来实现零停机程序版本切换"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-09-07T13:35:26.000Z"><a href="/2016/09/07/使用confd和etcd来实现零停机程序版本切换/">2016-09-07</a></time>
+        
+  
+    <h1 class="title">使用confd和etcd来实现零停机程序版本切换</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>因为容器比较轻量化，一台主机上可以同时运行多个容器，所以程序的版本切换可以通过移除旧版本的容器同时启动新版本的容器来简单的实现。对于基于web应用来说，可以通过nginx和confd来实现版本切换而不需要停机。</p>
+<a id="more"></a>
+<p>现在有很多容器的编排和调度工具（如Rancher，K8S，Mesos等）都可以实现零停机的程序版本切换，并且提供了很好的操作接口。我们这里没有直接使用这些工具，而是通过比较基础的工具来探索一下程序的配置文件的动态更新过程，以及程序版本切换的实现。</p>
+<p>作为示例，首先，启动一个应用程序，此程序就是一个在Ubuntu上运行的Python的内置的web服务器，来列出容器根目录下的文件，后面将更新应用程序实现新的功能：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ PY1_WEB_IP=192.168.71.131</div><div class="line">[yangdong@centos7 ~]$ docker run <span class="_">-d</span> --name py1 -p 80 ubuntu:14.04 \</div><div class="line">&gt; sh -c <span class="string">'cd / &amp;&amp; python3 -m http.server 80'</span></div><div class="line">5c733a9a81b7b126cbbe82e3be9a8408cb61bc5f2b6c6a3418e8ece547f0e94d</div><div class="line">[yangdong@centos7 ~]$ docker inspect <span class="_">-f</span> <span class="string">'&#123;&#123;.NetworkSettings.Ports&#125;&#125;'</span> py1</div><div class="line">map[80/tcp:[&#123;0.0.0.0 32768&#125;]]</div><div class="line">[yangdong@centos7 ~]$ curl <span class="_">-s</span> <span class="variable">$PY1_WEB_IP</span>:32768 | tail</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"sbin/"</span>&gt;sbin/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"srv/"</span>&gt;srv/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"sys/"</span>&gt;sys/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"tmp/"</span>&gt;tmp/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"usr/"</span>&gt;usr/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"var/"</span>&gt;var/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;/ul&gt;</div><div class="line">&lt;hr&gt;</div><div class="line">&lt;/body&gt;</div><div class="line">&lt;/html&gt;</div></pre></td></tr></table></figure></p>
+<p>上面的命令启动了web服务器，然后通过<code>inspect</code>命令过滤出主机映射到容器内部端口的信息，最后确认了服务器正常运行。<br>下面我们使用了上篇文章“{% post_link 使用etcd来存储配置信息 %}”中配置的etcd集群来存储配置信息，确保你的运行环境内的etcd集群及etcd proxy正常运行。这次使用etcdctl工具（是“etcd controller”的简写）代替curl来和etcd交互：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ IMG=dockerinpractice/etcdctl</div><div class="line">[yangdong@centos7 ~]$ ETCD_HOST_IP=192.168.71.131</div><div class="line">[yangdong@centos7 ~]$ docker pull <span class="variable">$IMG</span></div><div class="line">[yangdong@centos7 ~]$ <span class="built_in">alias</span> etcdctl=<span class="string">"docker run --rm <span class="variable">$IMG</span> -C \"<span class="variable">$ETCD_HOST_IP</span>:8080\""</span></div><div class="line">[yangdong@centos7 ~]$ etcdctl <span class="built_in">set</span> /<span class="built_in">test</span> value</div><div class="line">value</div><div class="line">[yangdong@centos7 ~]$ etcdctl ls</div><div class="line">/mykey</div><div class="line">/mykey2</div><div class="line">/mykey3</div><div class="line">/<span class="built_in">test</span></div></pre></td></tr></table></figure></p>
+<p>上面的命令使用了已经构建好的<a href="https://github.com/docker-in-practice/etcdctl" target="_blank" rel="external">etcdctl的镜像</a>，并且设置了一个alias来简化命令行的输入，它总是连接到上篇设置好的etcd-proxy上。然后使用该命令设置了一个键值对，确认了etcd集群工作正常。<br>下面的命令下载了另一个已经构建好的镜像，我们可以通过<a href="https://github.com/docker-in-practice/confd-nginx" target="_blank" rel="external">镜像源代码的地址</a>来窥探镜像的构建过程。此镜像的功能就是一个可以动态更新nginx配置文件的反向代理服务器。它使用confd每隔10秒来从etcd取得配置信息，如果etcd中的信息有更新，confd便通过模板更新nginx的配置文件，然后使nginx自动重新载入配置文件。下面来看看其使用：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ IMG=dockerinpractice/confd-nginx</div><div class="line">[yangdong@centos7 ~]$ docker pull <span class="variable">$IMG</span></div><div class="line">[yangdong@centos7 ~]$ NGINX_REV_PROXY_IP=192.168.71.131</div><div class="line">[yangdong@centos7 ~]$ docker run <span class="_">-d</span> --name nginx -p 8000:80 <span class="variable">$IMG</span> <span class="variable">$ETCD_HOST_IP</span>:8080</div></pre></td></tr></table></figure></p>
+<p>上面的命令下载了该镜像，然后启动了容器，将主机的8000端口映射到容器的80端口上，最后面的参数告诉容器可以从哪里连接到etcd集群。不过在启动了上面的容器后，查看其日志输出，会发现它一直报错：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ docker logs nginx </div><div class="line">Using 192.168.71.131:8080 as backend</div><div class="line">2016-09-06T13:23:15Z 4864f3220b05 confd[14]: ERROR 100: Key not found (/app) [18]</div><div class="line">2016-09-06T13:23:25Z 4864f3220b05 confd[14]: ERROR 100: Key not found (/app) [18]</div><div class="line">2016-09-06T13:23:35Z 4864f3220b05 confd[14]: ERROR 100: Key not found (/app) [18]</div><div class="line">2016-09-06T13:23:45Z 4864f3220b05 confd[14]: ERROR 100: Key not found (/app) [18]</div><div class="line">2016-09-06T13:23:55Z 4864f3220b05 confd[14]: ERROR 100: Key not found (/app) [18]</div><div class="line">2016-09-06T13:24:05Z 4864f3220b05 confd[14]: ERROR 100: Key not found (/app) [18]</div></pre></td></tr></table></figure></p>
+<p>这是因为我们还未将正确的配置信息写入到etcd集群中，该信息告诉上面的名为nginx的反向代理容器其upstream的web服务器的地址和端口。在最开始，我们配置了一个基于Ubuntu的内置的Python网页服务器，通过<code>inspect</code>命令得到其映射到主机的端口信息（在第一段代码的第5行得到，这里是32768），也知道其容器所在主机的IP地址（在PY1_WEB_IP变量中）。下面我们将配置信息写入到etcd中：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ etcdctl <span class="built_in">set</span> /app/upstream/py1 <span class="variable">$PY1_WEB_IP</span>:32768</div><div class="line">192.168.71.131:32768</div></pre></td></tr></table></figure></p>
+<p>在等待最少10秒后，查询nginx容器的日志发现配置文件已更新，然后确认反向代理正常运行：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ docker logs nginx</div><div class="line">...</div><div class="line">2016-09-06T13:40:39Z 4864f3220b05 confd[14]: INFO /etc/nginx/conf.d/default.conf has md5sum 8acce95d7a823ee747d694d138af36f2 should be b12d9a3cb239a66b2c3b3287356855a6</div><div class="line">2016-09-06T13:40:39Z 4864f3220b05 confd[14]: INFO Target config /etc/nginx/conf.d/default.conf out of sync</div><div class="line">2016-09-06T13:40:40Z 4864f3220b05 confd[14]: INFO Target config /etc/nginx/conf.d/default.conf has been updated</div><div class="line">[yangdong@centos7 ~]$ curl <span class="_">-s</span> <span class="variable">$NGINX_REV_PROXY_IP</span>:8000 | tail</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"sbin/"</span>&gt;sbin/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"srv/"</span>&gt;srv/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"sys/"</span>&gt;sys/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"tmp/"</span>&gt;tmp/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"usr/"</span>&gt;usr/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"var/"</span>&gt;var/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;/ul&gt;</div><div class="line">&lt;hr&gt;</div><div class="line">&lt;/body&gt;</div><div class="line">&lt;/html&gt;</div></pre></td></tr></table></figure></p>
+<p>好了，我们已经使用了一个可以动态更新配置文件的反向代理容器nginx，它不断将请求转发到py1 web容器。这个py1容器只是简单得将根目录“/”下面的文件列出。<br>假如我们现在有了新的需求，想要列出“/etc”目录下的文件，这就需要通过更新web服务器来实现。然而这里我们通过启动另外一个web服务器容器py2来实现这个功能，而不是在py1上更新：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ PY2_WEB_IP=192.168.71.131</div><div class="line">[yangdong@centos7 ~]$ docker run <span class="_">-d</span> --name py2 -p 80 ubuntu:14.04 \</div><div class="line">&gt; sh -c <span class="string">'cd /etc &amp;&amp; python3 -m http.server 80'</span></div><div class="line">[yangdong@centos7 ~]$ docker inspect <span class="_">-f</span> <span class="string">'&#123;&#123;.NetworkSettings.Ports&#125;&#125;'</span> py2</div><div class="line">map[80/tcp:[&#123;0.0.0.0 32771&#125;]]</div><div class="line">[yangdong@centos7 ~]$ curl <span class="variable">$PY2_WEB_IP</span>:32771 | tail | head -n 5</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"udev/"</span>&gt;udev/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"update-motd.d/"</span>&gt;update-motd.d/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"upstart-xsessions"</span>&gt;upstart-xsessions&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"vim/"</span>&gt;vim/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"vtrgb"</span>&gt;vtrgb@&lt;/a&gt;&lt;/li&gt;</div></pre></td></tr></table></figure></p>
+<p>上面的命令启动了py2容器，并且验证了容器的正常运行。下面要将py2的相关信息写入etcd，使得nginx反向代理可以得知py2的存在：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ etcdctl <span class="built_in">set</span> /app/upstream/py2 <span class="variable">$PY2_WEB_IP</span>:32771</div><div class="line">192.168.71.131:32771</div><div class="line">[yangdong@centos7 ~]$ etcdctl ls /app/upstream</div><div class="line">/app/upstream/py1</div><div class="line">/app/upstream/py2</div><div class="line">[yangdong@centos7 ~]$ curl <span class="_">-s</span> <span class="variable">$NGINX_REV_PROXY_IP</span>:8000 | tail | head -n 5</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"sbin/"</span>&gt;sbin/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"srv/"</span>&gt;srv/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"sys/"</span>&gt;sys/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"tmp/"</span>&gt;tmp/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"usr/"</span>&gt;usr/&lt;/a&gt;&lt;/li&gt;</div><div class="line">[yangdong@centos7 ~]$ curl <span class="_">-s</span> <span class="variable">$NGINX_REV_PROXY_IP</span>:8000 | tail | head -n 5</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"udev/"</span>&gt;udev/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"update-motd.d/"</span>&gt;update-motd.d/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"upstart-xsessions"</span>&gt;upstart-xsessions&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"vim/"</span>&gt;vim/&lt;/a&gt;&lt;/li&gt;</div><div class="line">&lt;li&gt;&lt;a href=<span class="string">"vtrgb"</span>&gt;vtrgb@&lt;/a&gt;&lt;/li&gt;</div></pre></td></tr></table></figure></p>
+<p>通过前面的命令，可以发现现在nginx反向代理容器可以感知到两个backends同时存在。整个过程可以通过下图描述出来：<br><img src="/2016/09/07/使用confd和etcd来实现零停机程序版本切换/1.png" alt="“将py2容器加入etcd”" title="“将py2容器加入etcd”"><br>要将py1容器切换至py2容器，现在只剩下最后一步，在etcd集群中移除py1的配置：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ etcdctl rm /app/upstream/py1</div><div class="line"></div><div class="line">[yangdong@centos7 ~]$ etcdctl ls /app/upstream/</div><div class="line">/app/upstream/py2</div><div class="line">[yangdong@centos7 ~]$ docker rm -vf py1</div><div class="line">py1</div></pre></td></tr></table></figure></p>
+<p>好了，现在我们实现了程序版本的切换。在切换过程中，应用程序一直没有停机，并且管理员也不再需要手动连接到web服务器上去更新其配置文件，然后重新reload nginx。</p>
+<p>本篇我们探索了confd和etcd配合使用，实现配置文件的更新。这里是手动更新的etcd集群的信息，其实还有更加自动化的方式来更新etcd，来实现服务发现机制。可以通过容器集群管理工具（如Rancher，K8S，Mesos等）来进行容器生产环境的管理，避免手动更新etcd集群信息。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/Docker/">Docker</a>, <a href="/categories/Docker/CICD/">持续集成与交付</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/ServiceDiscovery/">服务发现</a>, <a href="/tags/Docker/">Docker</a>, <a href="/tags/confd/">confd</a>, <a href="/tags/etcd/">etcd</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/09/07/使用confd和etcd来实现零停机程序版本切换/" data-title="使用confd和etcd来实现零停机程序版本切换" data-url="https://andyyoung01.github.io/2016/09/07/使用confd和etcd来实现零停机程序版本切换/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

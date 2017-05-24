@@ -1,0 +1,369 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Apache Mesos(10)-使用Chronos创建复杂任务 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Apache Mesos(10)-使用Chronos创建复杂任务"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-08-09T09:15:19.000Z"><a href="/2016/08/09/Apache-Mesos-10-使用Chronos创建复杂任务/">2016-08-09</a></time>
+        
+  
+    <h1 class="title">Apache Mesos(10)-使用Chronos创建复杂任务</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#使用Chronos创建复杂任务"><span class="toc-text">使用Chronos创建复杂任务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#查看任务状态"><span class="toc-text">查看任务状态</span></a></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>前一篇文章我们创建了简单的、独立的不依赖于其它任务的任务。它与我们非常熟悉的Linux系统上的Cron守护进程非常类似。Chronos也有能力创建复杂的、依赖于其它任务的任务。这个任务只有当它的父任务成功完成后才执行。这样的典型的任务包括用于数据处理和分析的ETL任务。</p>
+<a id="more"></a>
+<h3 id="使用Chronos创建复杂任务"><a href="#使用Chronos创建复杂任务" class="headerlink" title="使用Chronos创建复杂任务"></a>使用Chronos创建复杂任务</h3><p>Chronos可以创建一个复杂的任务，它至少对其它任务有一个依赖（它只在它所依赖的父任务成功完成后运行）。这可以是一个类似于通过extract-transform-load (ETL)管道进行数据处理的任务，它可以每小时、每天或者每周运行一次。一个典型的ETL任务做如下的工作：</p>
+<ul>
+<li>Extract提取数据。</li>
+<li>Transform转换数据，将数据存储为更适合分析的格式。</li>
+<li>Load装载数据，将数据保存到目标存储位置。</li>
+</ul>
+<p>在Chronos里，依赖其它任务的任务的配置文件里并不包括schedule字段，而是指定一个或多个父任务（使用parents字段），父任务成功完成之后此任务才能开始运行。下图描述里一个在Chronos里的ETL任务，注意schedule和parents字段的区别：<br><img src="/2016/08/09/Apache-Mesos-10-使用Chronos创建复杂任务/1.png" alt="“一个复杂的Chronos任务”" title="“一个复杂的Chronos任务”"><br>下面我们看一个实例：这个ETL计划任务对《War and Peace》书中的单词进行统计，统计出现频率最高的20个单词。这个例子使用了Spark。它的任务依赖如下图所示：<br><img src="/2016/08/09/Apache-Mesos-10-使用Chronos创建复杂任务/3.png" alt="“ETL Chronos任务”" title="“ETL Chronos任务”"><br>由于本篇主要是关于Chronos的，所以Spark等的安装配置及如何编写Spark的map/reduce程序本篇不再详细说明，上图中的HDFS我们也用本地文件系统代替，这样使我们的关注点集中在Chronos这里。</p>
+<blockquote>
+<p>如何在Mesos集群上运行Spark，请参考<a href="http://spark.apache.org/docs/latest/running-on-mesos.html" target="_blank" rel="external">官方文档</a>。</p>
+</blockquote>
+<p>首先编写第一个任务的JSON文件：<br><figure class="highlight json"><figcaption><span>01-download-war-and-peace.json</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">    <span class="attr">"name"</span>: <span class="string">"download-war-and-peace"</span>,</div><div class="line">    <span class="attr">"description"</span>: <span class="string">"Download the text of War and Peace from Project Gutenberg."</span>,</div><div class="line">    <span class="attr">"schedule"</span>: <span class="string">"R1//PT1M"</span>,</div><div class="line">    <span class="attr">"command"</span>: <span class="string">"cd $MESOS_SANDBOX &amp;&amp; cp 2600-0.txt /tmp/warandpeace.txt"</span>,</div><div class="line">    <span class="attr">"uris"</span>: [</div><div class="line">        <span class="string">"http://www.gutenberg.org/files/2600/2600-0.txt"</span></div><div class="line">    ]</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上面的代码清单从Project Gutenberg下载了War and Peace的文本，并将其存储到Mesos的工作目录中。在ETL任务的下一步将进行Spark的map/reduce任务，来计算文件中每个单词的出现次数。下面的代码清单创建了第二个Chronos任务，这次在<code>parents</code>字段中指定了前一个任务（download-war-and-peace）。<br><figure class="highlight json"><figcaption><span>02-spark-wordcount-job.json</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">    <span class="attr">"name"</span>: <span class="string">"war-and-peace-wordcount-spark-job"</span>,</div><div class="line">    <span class="attr">"description"</span>: <span class="string">"Use Spark to count all the words in War and Peace"</span>,</div><div class="line">    <span class="attr">"parents"</span>: [<span class="string">"download-war-and-peace"</span>],</div><div class="line">    <span class="attr">"command"</span>: <span class="string">"/opt/spark-2.0.0-bin-hadoop2.7/bin/spark-submit spark-wordcount-master/war-and-peace-wordcount_2.10-0.1.1-SNAPSHOT.jar $&#123;basepath&#125;"</span>,</div><div class="line">    <span class="attr">"uris"</span>: [</div><div class="line">        <span class="string">"https://github.com/andyyoung01/spark-wordcount/archive/master.zip"</span></div><div class="line">    ],</div><div class="line">    <span class="attr">"environmentVariables"</span>: [</div><div class="line">        &#123; <span class="attr">"name"</span>: <span class="string">"basepath"</span>, <span class="attr">"value"</span>: <span class="string">"/tmp"</span> &#125;</div><div class="line">    ]</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>上面的代码清单从github下载打包好的jar文件，并从工作目录中读取上一步下载好的文本文件。为了在Mesos UI中将结果显示出来，在下一步读取Spark的统计结果，排序，并且取得前20行。类似于上面的步骤，这里也指定了<code>parents</code>字段来确定此任务对前一任务的依赖。<br><figure class="highlight json"><figcaption><span>03-load-results-job.json</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">    <span class="attr">"name"</span>: <span class="string">"load-war-and-peace-word-counts"</span>,</div><div class="line">    <span class="attr">"description"</span>: <span class="string">"Read the output from HDFS and send it to stdout"</span>,</div><div class="line">    <span class="attr">"parents"</span>: [<span class="string">"war-and-peace-wordcount-spark-job"</span>],</div><div class="line">    <span class="attr">"command"</span>: <span class="string">"cat $&#123;basepath&#125;/result/part-* | sort -t, -rnk2 | head -20"</span>,</div><div class="line">    <span class="attr">"environmentVariables"</span>: [</div><div class="line">        &#123; <span class="attr">"name"</span>: <span class="string">"basepath"</span>, <span class="attr">"value"</span>: <span class="string">"/tmp"</span> &#125;</div><div class="line">    ]</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>好了。上面三个任务运行了一个ETL管道，它统计了War and Peace里出现频率最高的20个单词。下面的脚本文件可以批量将三个任务提交到Chronos里：<br><figure class="highlight bash"><figcaption><span>create-jobs.sh</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#!/bin/bash</span></div><div class="line"></div><div class="line"><span class="keyword">if</span> [[ ! <span class="variable">$#</span> &gt; 0 ]]; <span class="keyword">then</span></div><div class="line">    <span class="built_in">echo</span> <span class="string">"Usage: <span class="variable">$0</span> &lt;http://chronos-host:4400&gt;"</span></div><div class="line">    <span class="built_in">echo</span></div><div class="line">    <span class="built_in">exit</span> 1</div><div class="line"><span class="keyword">else</span></div><div class="line">    CHRONOS_URL=<span class="variable">$1</span></div><div class="line"><span class="keyword">fi</span></div><div class="line"></div><div class="line">DIR=$(dirname <span class="string">"<span class="variable">$&#123;BASH_SOURCE&#125;</span>"</span>)</div><div class="line">CURL=<span class="string">""</span></div><div class="line"></div><div class="line"><span class="keyword">for</span> job <span class="keyword">in</span> <span class="string">"<span class="variable">$&#123;DIR&#125;</span>"</span>/*.json; <span class="keyword">do</span></div><div class="line">    <span class="built_in">echo</span> -n <span class="string">"Creating job <span class="variable">$&#123;job&#125;</span> in Chronos..."</span></div><div class="line"></div><div class="line">    <span class="keyword">if</span> grep \<span class="string">"schedule\" "</span><span class="variable">$&#123;job&#125;</span><span class="string">" &gt; /dev/null; then</span></div><div class="line">        curl -H 'Content-Type: application/json' -d @<span class="variable">$&#123;job&#125;</span> <span class="variable">$&#123;CHRONOS_URL&#125;</span>/scheduler/iso8601</div><div class="line">        [[ $? == 0 ]] &amp;&amp; echo "Done.<span class="string">" || echo "</span>Error!<span class="string">"</span></div><div class="line">    elif grep \"parents\" "<span class="variable">$&#123;job&#125;</span><span class="string">" &gt; /dev/null; then</span></div><div class="line">        curl -H 'Content-Type: application/json' -d @<span class="variable">$&#123;job&#125;</span> <span class="variable">$&#123;CHRONOS_URL&#125;</span>/scheduler/dependency</div><div class="line">        [[ $? == 0 ]] &amp;&amp; echo "Done.<span class="string">" || echo "</span>Error!<span class="string">"</span></div><div class="line">    else</div><div class="line">        echo "Error: could not determine job <span class="built_in">type</span> <span class="keyword">for</span> <span class="string">'$&#123;job&#125;'</span><span class="string">"</span></div><div class="line">    fi</div><div class="line">done</div></pre></td></tr></table></figure></p>
+<p>将上面创建的3个json文档放在当前目录下，并确保目录中没有其它的json文件。然后使用如下命令调用上述脚本：</p>
+<pre><code>$ create-jobs.sh http://your-chronos-ip:4400
+</code></pre><h3 id="查看任务状态"><a href="#查看任务状态" class="headerlink" title="查看任务状态"></a>查看任务状态</h3><p>在运行了上述命令后，可以在Chronos的web界面中查看任务的运行状态及依赖关系：<br><img src="/2016/08/09/Apache-Mesos-10-使用Chronos创建复杂任务/4.png" alt="“Chronos任务状态”" title="“Chronos任务状态”"><br><img src="/2016/08/09/Apache-Mesos-10-使用Chronos创建复杂任务/5.png" alt="“Chronos任务依赖关系”" title="“Chronos任务依赖关系”"><br>在Mesos的界面中也可以查看任务的状态，如下图：<br><img src="/2016/08/09/Apache-Mesos-10-使用Chronos创建复杂任务/6.png" alt="“Mesos任务状态”" title="“Mesos任务状态”"><br>上图点击Sandbox进入该任务的工作目录后，可以继续查看任务的stdout：<br><img src="/2016/08/09/Apache-Mesos-10-使用Chronos创建复杂任务/7.png" alt="“Mesos任务状态”" title="“Mesos任务状态”"><br>最后显示出Spark的运行结果，统计出该书中出现频率最高的20个单词：<br><img src="/2016/08/09/Apache-Mesos-10-使用Chronos创建复杂任务/8.png" alt="“任务结果”" title="“任务结果”"></p>
+<p>本文旨在学习Chronos的复杂任部署，文中对于Spark进行了简化的部署，省略了HDFS的部署，关于Spark及HDFS的部署请参考官方文档。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/DistributedSystems/">分布式系统</a>, <a href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Apache-mesos/">Apache mesos</a>, <a href="/tags/DistributedSystems/">分布式系统</a>, <a href="/tags/Chronos/">Chronos</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/08/09/Apache-Mesos-10-使用Chronos创建复杂任务/" data-title="Apache Mesos(10)-使用Chronos创建复杂任务" data-url="https://andyyoung01.github.io/2016/08/09/Apache-Mesos-10-使用Chronos创建复杂任务/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

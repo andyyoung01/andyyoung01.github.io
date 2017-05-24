@@ -1,0 +1,408 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>在salt state中使用判断、循环及变量 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="在salt state中使用判断、循环及变量"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-10-18T12:41:17.000Z"><a href="/2016/10/18/在salt-state中使用判断、循环及变量/">2016-10-18</a></time>
+        
+  
+    <h1 class="title">在salt state中使用判断、循环及变量</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#在salt-state中使用判断"><span class="toc-text">在salt state中使用判断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在salt-state中使用循环"><span class="toc-text">在salt state中使用循环</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在salt-state中使用变量"><span class="toc-text">在salt state中使用变量</span></a></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>上篇文章在state文件中使用了jinja模板，提高了书写state文件的灵活性。本篇继续学习state文件的编写。在state文件中可以使用判断、循环及变量，使大大提高了其灵活性，本篇来学习一下这些用法。</p>
+<a id="more"></a>
+<h3 id="在salt-state中使用判断"><a href="#在salt-state中使用判断" class="headerlink" title="在salt state中使用判断"></a>在salt state中使用判断</h3><p>这个示例使用了两个minions，一个名称为stgdc1app01，另一个为stgdc2app01。在“<a href="/2016/10/12/salt的安装和配置/" title="salt的安装和配置">salt的安装和配置</a>”中介绍了如何安装和配置salt的master和minion，这里直接进入state文件的编写。本篇的目标是根据minion的fqdn名称，创建网络的配置文件，配置文件基于模板文件，在创建过程中使用了一些基于Python的操作。下面就看一下具体的操作：<br>首先需要得到这两个minions的关于网络的grains数据，后面需要用到：</p>
+<pre><code>[root@centos7-A ~]# salt \* grains.item ip_interfaces hwaddr_interfaces
+stgdc2app01:
+    ----------
+    hwaddr_interfaces:
+        ----------
+        eno16777736:
+            00:0c:29:62:4d:63
+        lo:
+            00:00:00:00:00:00
+    ip_interfaces:
+        ----------
+        eno16777736:
+            - 192.168.71.169
+            - fe80::20c:29ff:fe62:4d63
+        lo:
+            - 127.0.0.1
+            - ::1
+stgdc1app01:
+    ----------
+    hwaddr_interfaces:
+        ----------
+        eno16777736:
+            00:0c:29:94:77:20
+        lo:
+            00:00:00:00:00:00
+    ip_interfaces:
+        ----------
+        eno16777736:
+            - 192.168.71.168
+            - fe80::20c:29ff:fe94:7720
+        lo:
+            - 127.0.0.1
+            - ::1
+</code></pre><p>接着在staging的环境下创建netconfig的state，就是在staging的基目录下创建netconfig文件夹，在此文件夹下继续创建一个名为files的文件夹，在files文件夹下创建名为ifcfg-eth0的文件，在netconfig文件夹下创建init.sls文件，最后文件夹的目录结构类似于如下这样：</p>
+<pre><code>[root@centos7-A staging]# tree
+.
+└── netconfig
+    ├── files
+    │   └── ifcfg-eth0
+    └── init.sls
+
+2 directories, 2 files
+</code></pre><p>init.sls文件和ifcfg-eth0文件的内容分别如下：<br><figure class="highlight yaml"><figcaption><span>ifcfg-eth0</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="string">DEVICE=eth0</span></div><div class="line"><span class="string">HWADDR=&#123;&#123;</span> <span class="string">hwaddr</span> <span class="string">&#125;&#125;</span></div><div class="line"><span class="string">TYPE=Ethernet</span></div><div class="line"><span class="string">ONBOOT=yes</span></div><div class="line"><span class="string">NM_CONTROLLED=no</span></div><div class="line"><span class="string">BOOTPROTO=none</span></div><div class="line"><span class="string">IPADDR=&#123;&#123;</span> <span class="string">ipaddr</span> <span class="string">&#125;&#125;</span></div><div class="line"><span class="string">NETMASK=&#123;&#123;</span> <span class="string">netmask</span> <span class="string">&#125;&#125;</span></div></pre></td></tr></table></figure></p>
+<figure class="highlight yaml"><figcaption><span>init.sls</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="string">&#123;%</span> <span class="string">if</span> <span class="string">grains['id'].startswith('stgdc1')</span> <span class="string">%&#125;</span></div><div class="line"><span class="string">&#123;%</span> <span class="string">set</span> <span class="string">netmask</span> <span class="string">=</span> <span class="string">'255.255.255.0'</span> <span class="string">%&#125;</span></div><div class="line"><span class="string">&#123;%</span> <span class="string">elif</span> <span class="string">grains['id'].startswith('stgdc2')</span> <span class="string">%&#125;</span></div><div class="line"><span class="string">&#123;%</span> <span class="string">set</span> <span class="string">netmask</span> <span class="string">=</span> <span class="string">'255.255.0.0'</span> <span class="string">%&#125;</span></div><div class="line"><span class="string">&#123;%</span> <span class="string">endif</span> <span class="string">%&#125;</span></div><div class="line"><span class="attr">network_file:</span></div><div class="line">  <span class="string">file.managed:</span></div><div class="line"><span class="attr">    - name:</span> <span class="string">/etc/sysconfig/network-scripts/ifcfg-eth0</span></div><div class="line"><span class="attr">    - source:</span> <span class="attr">salt://netconfig/files/ifcfg-eth0</span></div><div class="line"><span class="attr">    - mode:</span> <span class="number">644</span></div><div class="line"><span class="attr">    - template:</span> <span class="string">jinja</span></div><div class="line"><span class="attr">    - context:</span></div><div class="line"><span class="attr">      ipaddr:</span> <span class="string">&#123;&#123;</span> <span class="string">grains['ip_interfaces']['eno16777736'][0]</span> <span class="string">&#125;&#125;</span></div><div class="line"><span class="attr">      netmask:</span> <span class="string">&#123;&#123;</span> <span class="string">netmask</span> <span class="string">&#125;&#125;</span></div><div class="line"><span class="attr">      hwaddr:</span> <span class="string">&#123;&#123;</span> <span class="string">grains['hwaddr_interfaces']['eno16777736'].upper()</span> <span class="string">&#125;&#125;</span></div></pre></td></tr></table></figure>
+<p>文件生成的大部分过程与上篇文章介绍的一致，这里我们主要关心init.sls文件中的第1行和第3行，它使用了判断语句，并且使用了Python的函数startswith，它根据minion名称的不同，设置不同的netmask。另外注意此文件的最后一行使用了Python的函数upper，它将字符串全部转换为大写。完成上述文件的编写后，便可以将state应用到minions上：</p>
+<pre><code>[root@centos7-A netconfig]# salt -L &apos;stgdc1app01,stgdc2app01&apos; state.sls netconfig saltenv=staging
+</code></pre><p>在应用state到minions上时，这里使用了-L命令行选项来指定应用到的minion。-L选项的意义是使用列表来指定minion，下篇会学习各种指定minions的方式。</p>
+<h3 id="在salt-state中使用循环"><a href="#在salt-state中使用循环" class="headerlink" title="在salt state中使用循环"></a>在salt state中使用循环</h3><p>仍然使用上面的minions，在staging环境中，编辑pillar文件/opt/salt/pillar/staging/user/init.sls，使其具有以下内容：<br><figure class="highlight yaml"><figcaption><span>init.sls</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="attr">dev_user_list:</span></div><div class="line"><span class="attr">  optimus:</span></div><div class="line"><span class="attr">    uid:</span> <span class="number">7001</span></div><div class="line"><span class="attr">    passwd:</span> <span class="string">'$1$Dw1TxMI7$pmeYTdmz.rlunqPd7JELR.'</span></div><div class="line"><span class="attr">  bumblebee:</span></div><div class="line"><span class="attr">    uid:</span> <span class="number">7002</span></div><div class="line"><span class="attr">    passwd:</span> <span class="string">'$1$ZHUeIAfq$6sJl9rHVDX2UjBH1KrPZP1'</span></div><div class="line"><span class="attr">  ironhide:</span></div><div class="line"><span class="attr">    uid:</span> <span class="number">7003</span></div><div class="line"><span class="attr">    passwd:</span> <span class="string">'$1$rcJAiq7y$bJzv3HzVTbeQlA3cIu1Gb1'</span></div></pre></td></tr></table></figure></p>
+<p>编辑user state的配置文件/opt/salt/staging/user/init.sls，使其具有如下内容：<br><figure class="highlight yaml"><figcaption><span>init.sls</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="string">&#123;%</span> <span class="string">for</span> <span class="string">user,</span> <span class="string">details</span> <span class="string">in</span> <span class="string">pillar['dev_user_list'].iteritems()</span> <span class="string">%&#125;</span></div><div class="line"><span class="string">&#123;&#123;</span> <span class="string">user</span> <span class="string">&#125;&#125;:</span></div><div class="line">  <span class="string">user.present:</span></div><div class="line"><span class="attr">    - home:</span> <span class="string">/home/&#123;&#123;</span> <span class="string">user</span> <span class="string">&#125;&#125;</span></div><div class="line"><span class="attr">    - uid:</span> <span class="string">&#123;&#123;</span> <span class="string">details['uid']</span> <span class="string">&#125;&#125;</span></div><div class="line"><span class="attr">    - password:</span> <span class="string">&#123;&#123;</span> <span class="string">details['passwd']</span> <span class="string">&#125;&#125;</span></div><div class="line"><span class="attr">    - shell:</span> <span class="string">/bin/bash</span></div><div class="line"><span class="string">&#123;%</span> <span class="string">endfor</span> <span class="string">%&#125;</span></div></pre></td></tr></table></figure></p>
+<p>上面文件的第一行和最后一行组成了for循环，pillar[‘dev_user_list’]中保存了一个Python字典，在使用了iteritems函数后，字典中的username保存在user变量中，其它数据保存在details变量中。可以通过和前面一样的方式来应用state到minions上。</p>
+<h3 id="在salt-state中使用变量"><a href="#在salt-state中使用变量" class="headerlink" title="在salt state中使用变量"></a>在salt state中使用变量</h3><p>其实在第一小节“在salt state中使用判断”里已经应用到了变量。在state的init.sls文件中，第2行为：</p>
+<pre><code>{% set netmask = '255.255.255.0' %}，
+</code></pre><p>这里set关键字用来设置变量，netmask作为变量名，变量值为等号后面的部分。<br>在使用变量时，一定不要在变量名外加引号，就像init.sls文件中第14行那样使用：</p>
+<pre><code>netmask: {{ netmask }}
+</code></pre><p>这里前面的netmask是在context下，表示模板ifcfg-eth0中的netmask的值是从这里得到的。后面的netmask是state文件中的变量，由set关键字指定，值是等号后面的部分。</p>
+<p>本篇学习了salt state中判断、循环及变量的使用。下篇看一下salt中指定minion的各种方式。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/Salt/">Salt</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Salt/">Salt</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/10/18/在salt-state中使用判断、循环及变量/" data-title="在salt state中使用判断、循环及变量" data-url="https://andyyoung01.github.io/2016/10/18/在salt-state中使用判断、循环及变量/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>使用Consul进行服务发现 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="使用Consul进行服务发现"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-09-27T12:01:15.000Z"><a href="/2016/09/27/使用Consul进行服务发现/">2016-09-27</a></time>
+        
+  
+    <h1 class="title">使用Consul进行服务发现</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>当应用程序由多个服务或层次组成，为了使这些应用程序或服务能够彼此间进行通信，需要知道这些服务部署的位置。这些信息可以存储在类似于Etcd或ZooKeeper等分布式的键值存储系统中，也可以通过DNS查找到服务的部署位置。本篇来看看Consul提供的服务发现功能。</p>
+<a id="more"></a>
+<p>当有多个彼此独立的服务需要协同工作时，就需要一种机制来可以让一个应用或者组件发现其运行环境以及其它应用或组件的信息。Consul就可以提供这些功能：</p>
+<ul>
+<li><em>服务配置</em> - 它可以提供一个键值存储系统来保存和共享键值对，类似于etcd和ZooKeeper。</li>
+<li><em>服务发现</em> - 它提供一个可以用来注册服务和提供DNS的API，类似于SkyDNS。</li>
+<li><em>服务监控</em> - 它提供一个API用于注册健康检查，类似于Nagios。</li>
+</ul>
+<p>在使用Consul时，可以使用它的全部或部分功能，这些功能之间并没有依赖。比如如果已经有了监控的基础设施，没必要再用Consul取代它们。<br>一个典型的Consul setup类似于下图：<br><img src="/2016/09/27/使用Consul进行服务发现/1.png" alt="“典型的Consul setup”" title="“典型的Consul setup”"><br>在Consul中数据的存储是由server agent负责的。它们组成一个<em>consensus</em>集群-这个概念存在于大多数的分布式数据存储系统中。简单来说，如果有半数以上的server agents可用，则可以确保数据可以恢复。<br>所有想要与Consul交互的机器都应该运行一个Consul client agent。这些agents将请求转发给servers并且进行健康检查。<br>这里我们通过Docker进行Consul的部署，为了简单起见，Consul server并没有组成<em>consensus</em>集群，我们只是使用了一个节点进行搭建，此节点的机器名为centos7-A，IP地址为192.168.71.167：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7-A ~]$ docker pull consul</div><div class="line">...</div><div class="line">[yangdong@centos7-A ~]$ docker run <span class="_">-d</span> --net=host \</div><div class="line">  <span class="_">-e</span> <span class="string">'CONSUL_ALLOW_PRIVILEGED_PORTS='</span> \</div><div class="line">  --name consul_server consul agent -server \</div><div class="line">  -bind=192.168.71.167 -bootstrap-expect=1 \</div><div class="line">  -dns-port=53 -client=192.168.71.167 \</div><div class="line">  -recursor 8.8.8.8 -recursor 8.8.4.4</div><div class="line">4f580aa073cfc4108c3bdad23dacd140bd90b4a40467422d895252b09da8ef21</div></pre></td></tr></table></figure></p>
+<p>上面的docker run命令有几点需要注意：</p>
+<ul>
+<li>这里使用的是consul镜像的最新版本v0.7.0。</li>
+<li>使用了<code>--net=host</code>的命令行参数。此参数使得docker容器越过了net namespace的隔离，解决了潜在的UDP通信的问题，而且这种用法不用手动指定所有的端口映射。</li>
+<li>使用了<code>-e &#39;CONSUL_ALLOW_PRIVILEGED_PORTS=&#39;</code>环境变量，使用了<code>-dns-port=53</code>命令行选项。这允许容器绑定到标准的DNS端口53上。如果不指定这两项，consul会默认绑定到本地回环lo地址的8600端口上。</li>
+<li>提供了两个<code>recursor</code>参数。这告诉Consul当请求地址并不能由consul自己解析的话，它到哪里去查询其它的DNS服务器。这里指定了google提供的两个dns服务器的ip。</li>
+<li><code>-bootstrap-expect=1</code>参数意味着Consul集群使用1个agent便可以开始操作，这没有提供高可用的特性。此参数通常设置为3（或更多）来确保集群直到需要数量的服务器加入集群后才能开始操作。为了将更多的server agent加入集群，需要使用<code>-join</code>参数。</li>
+<li><code>bind</code>指定的是集群间通信使用的ip地址，<code>client</code>指定的是客户端需要访问的ip地址。</li>
+</ul>
+<p>下面在第二台机器上，启动一个client agent，并且将其加入集群，此节点的机器名为centos7，IP地址为192.168.71.131：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ docker run <span class="_">-d</span> --net=host <span class="_">-e</span> <span class="string">'CONSUL_ALLOW_PRIVILEGED_PORTS='</span> \</div><div class="line">  --name consul_client consul agent -dns-port=53 \</div><div class="line">  -bind=192.168.71.131 -client=172.17.0.1 -join 192.168.71.167 \</div><div class="line">  -recursor 8.8.8.8 -recursor 8.8.4.4</div><div class="line">c2567b364729b23980c8229249a4060d3facd87667387c523cbafdf8d9da4a63</div></pre></td></tr></table></figure></p>
+<p>上面需要注意的是我们指定<code>-client</code>的ip地址为主机上docker0（docker网桥）的ip地址，这样指定是便于本机的其它docker容器使用此地址与consul交互。</p>
+<blockquote>
+<p>关于Consul DNS的更详细介绍请参考<a href="https://www.consul.io/docs/agent/dns.html" target="_blank" rel="external">https://www.consul.io/docs/agent/dns.html</a>。</p>
+</blockquote>
+<p>下面验证一下client agent是否已经加连接上了server agent。这里使用curl命令：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ curl <span class="_">-s</span>SL 172.17.0.1:8500/v1/agent/members| python -m json.tool | grep Addr</div><div class="line">        <span class="string">"Addr"</span>: <span class="string">"192.168.71.131"</span>,</div><div class="line">        <span class="string">"Addr"</span>: <span class="string">"192.168.71.167"</span>,</div></pre></td></tr></table></figure></p>
+<p>可见client已经连接上了server。下面探索一下怎样进行服务注册和服务发现。典型的注册过程是当容器或服务启动后，其通过对本地consul client agent的API调用，促使client agent将信息分发到server agents上。这里我们使用手动的注册步骤：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ docker run <span class="_">-d</span> --name files -p 8000:80 ubuntu:14.04 \</div><div class="line">  python3 -m http.server 80</div><div class="line">6eda22ee7bddaf6ebd18aeb5bffe5e26b3e366fae5a8a31d2433c72f04d3574e</div><div class="line">[yangdong@centos7 ~]$ docker inspect <span class="_">-f</span> <span class="string">'&#123;&#123;.NetworkSettings.IPAddress&#125;&#125;'</span> files</div><div class="line">172.17.0.2</div><div class="line">[yangdong@centos7 ~]$ curl 172.17.0.2</div><div class="line">&lt;!DOCTYPE HTML PUBLIC <span class="string">"-//W3C//DTD HTML 4.01//EN"</span> <span class="string">"http://www.w3.org/TR/html4/strict.dtd"</span>&gt;</div><div class="line">...</div><div class="line">[yangdong@centos7 ~]$ curl -X PUT --data-binary <span class="string">'&#123;"Name":"files","Port":8000&#125;'</span> \</div><div class="line">  172.17.0.1:8500/v1/agent/service/register</div><div class="line">[yangdong@centos7 ~]$ docker logs consul_client | tail -1</div><div class="line">    2016/09/27 06:21:41 [INFO] agent: Synced service <span class="string">'files'</span></div></pre></td></tr></table></figure></p>
+<p>上面第1、2行 命令创建了一个HTTP server容器；第4行命令得到该容器的IP；第6行验证了容器的正常运行；最关键的是第9、10行命令，它通过curl访问了Consul的HTTP API来注册服务，其中服务名称是必须的，这里我们指定为files，其它都是可选项；第11行命令通过consul的日志确认了service已经同步，所以我们可以通过DNS接口来得到其信息。下面我们就通过dig命令来查询服务的DNS信息，来验证刚才的操作：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ dig @192.168.71.167 files.service.consul +short</div><div class="line">192.168.71.131</div><div class="line">[yangdong@centos7 ~]$ dig @172.17.0.1 files.service.consul +short</div><div class="line">192.168.71.131</div><div class="line">[yangdong@centos7 ~]$ dig @172.17.0.1 files.service.consul srv +short</div><div class="line">1 1 8000 centos7.node.dc1.consul.</div><div class="line">[yangdong@centos7 ~]$ docker run -it --dns 172.17.0.1 ubuntu:14.04 bash</div><div class="line">root@c07724037814:/<span class="comment"># ping www.baidu.com</span></div><div class="line">PING www.a.shifen.com (220.181.112.244) 56(84) bytes of data.</div><div class="line">64 bytes from 220.181.112.244: icmp_seq=1 ttl=127 time=5.05 ms</div><div class="line">64 bytes from 220.181.112.244: icmp_seq=2 ttl=127 time=2.40 ms</div><div class="line">^C</div><div class="line">--- www.a.shifen.com ping statistics ---</div><div class="line">2 packets transmitted, 2 received, 0% packet loss, time 1002ms</div><div class="line">rtt min/avg/max/mdev = 2.406/3.729/5.052/1.323 ms</div><div class="line">root@c07724037814:/<span class="comment"># ping files.service.consul</span></div><div class="line">PING files.service.consul (192.168.71.131) 56(84) bytes of data.</div><div class="line">64 bytes from centos7.node.dc1.consul (192.168.71.131): icmp_seq=1 ttl=64 time=0.056 ms</div><div class="line">64 bytes from centos7.node.dc1.consul (192.168.71.131): icmp_seq=2 ttl=64 time=0.076 ms</div><div class="line">^C</div><div class="line">--- files.service.consul ping statistics ---</div><div class="line">2 packets transmitted, 2 received, 0% packet loss, time 1002ms</div><div class="line">rtt min/avg/max/mdev = 0.056/0.066/0.076/0.010 ms</div></pre></td></tr></table></figure></p>
+<p>上面第1行命令从server agent DNS查询服务的IP地址，这个DNS服务对不在consul集群中的任何可以访问到此IP的机器都可用；<br>第3行命令从本机的client agent DNS来查询服务的IP地址；<br>第5行命令从client agent DNS查询SRV的记录，SRV记录是通过DNS给出服务信息的一种方式，上面的命令返回了服务的端口号以及提供服务的机器的节点名称；<br>第7行命令启动了一个新的容器，并且指定该容器应该使用本地client agent提供的DNS服务，然后进入容器的bash测试是否可以解析地址；<br>第8行通过ping百度确认可以解析百度的域名；<br>第16行通过ping前面配置的服务名，确认该服务也可以正常解析。</p>
+<p>通过上面的测试，我们发现Resolvable和Consul DNS服务非常相似。它们之间最大的不同就是Consul可以让你在多个节点之间查找容器，而Resolvable只是在单台节点上查找。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/DistributedSystems/">分布式系统</a>, <a href="/categories/DistributedSystems/Consul/">Consul</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/DistributedSystems/">分布式系统</a>, <a href="/tags/ServiceDiscovery/">服务发现</a>, <a href="/tags/Docker/">Docker</a>, <a href="/tags/Consul/">Consul</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/09/27/使用Consul进行服务发现/" data-title="使用Consul进行服务发现" data-url="https://andyyoung01.github.io/2016/09/27/使用Consul进行服务发现/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

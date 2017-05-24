@@ -1,0 +1,388 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>salt minion的高级配置及grains | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="salt minion的高级配置及grains"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-10-15T09:20:54.000Z"><a href="/2016/10/15/salt-minion的高级配置及grains/">2016-10-15</a></time>
+        
+  
+    <h1 class="title">salt minion的高级配置及grains</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#配置masterless-minion"><span class="toc-text">配置masterless minion</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在minion上配置grains"><span class="toc-text">在minion上配置grains</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#从minions拉取master上的配置"><span class="toc-text">从minions拉取master上的配置</span></a></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>前两篇文章学习了salt的state、pillar和top文件的应用，本篇学习一下salt minions的其它配置，包括如何配置masterless的minion，如何配置grains以及在minions上直接执行salt命令。</p>
+<a id="more"></a>
+<h3 id="配置masterless-minion"><a href="#配置masterless-minion" class="headerlink" title="配置masterless minion"></a>配置masterless minion</h3><p>salt有一种配置方式允许minions运行在没有master的模式下。在这种情况下minion充当它自己的master。这是通过将配置文件<code>/etc/salt/minion</code>中的file_client参数从remote改为local实现的。改为local后，还需要配置本地的存储states和pillars的路径。具体操作如下：<br>首先在/etc/salt/minion.d文件夹中添加文件file_client.conf，file_roots.conf和pillar_roots.conf：<br><figure class="highlight yaml"><figcaption><span>file_client.conf</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="attr">file_client:</span>  <span class="string">local</span></div></pre></td></tr></table></figure></p>
+<p>值local允许minion从本地文件系统中查找states和pillars。<br><figure class="highlight yaml"><figcaption><span>file_roots.conf</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="attr">file_roots:</span></div><div class="line"><span class="attr">  base:</span></div><div class="line"><span class="bullet">    -</span> <span class="string">/opt/salt/base</span></div><div class="line"><span class="attr">  development:</span></div><div class="line"><span class="bullet">    -</span> <span class="string">/opt/salt/development</span></div></pre></td></tr></table></figure></p>
+<figure class="highlight yaml"><figcaption><span>pillar_roots.conf</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="attr">pillar_roots:</span></div><div class="line"><span class="attr">  base:</span></div><div class="line"><span class="bullet">    -</span> <span class="string">/opt/salt/pillar/base</span></div><div class="line"><span class="attr">  development:</span></div><div class="line"><span class="bullet">    -</span> <span class="string">/opt/salt/pillar/development</span></div></pre></td></tr></table></figure>
+<p>上面这两个文件设置了states和pillars在本地的存储位置，与master上的配置类似，states和pillars的配置要放在这两个文件定义的位置里。配置完成后需要重启minion。</p>
+<pre><code>[root@centos7-B minion.d]# systemctl restart salt-minion
+</code></pre><p>下面测试一下上面的配置。在/opt/salt/base创建一个名为user-wilma.sls的文件，内容如下：<br><figure class="highlight yaml"><figcaption><span>user-wilma.sls</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="attr">user_wilma:</span></div><div class="line">  <span class="string">user.present:</span></div><div class="line"><span class="attr">    - name:</span> <span class="string">wilma</span></div><div class="line"><span class="attr">    - fullname:</span> <span class="string">Wilma</span> <span class="string">Flintstone</span></div><div class="line"><span class="attr">    - uid:</span> <span class="number">2002</span></div><div class="line"><span class="attr">    - home:</span> <span class="string">/home/wilma</span></div></pre></td></tr></table></figure></p>
+<p>使用下面的命令检查此state：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line">[root@centos7-B base]# salt-call state.show_sls user-wilma</div><div class="line">[INFO    ] Loading fresh modules for state activity</div><div class="line">[INFO    ] Fetching file from saltenv &apos;base&apos;, ** done ** &apos;user-wilma.sls&apos;</div><div class="line">local:</div><div class="line">    ----------</div><div class="line">    user_wilma:</div><div class="line">        ----------</div><div class="line">        __env__:</div><div class="line">            base</div><div class="line">        __sls__:</div><div class="line">            user-wilma</div><div class="line">        user:</div><div class="line">            |_</div><div class="line">              ----------</div><div class="line">              name:</div><div class="line">                  wilma</div><div class="line">            |_</div><div class="line">              ----------</div><div class="line">              fullname:</div><div class="line">                  Wilma Flintstone</div><div class="line">            |_</div><div class="line">              ----------</div><div class="line">              uid:</div><div class="line">                  2002</div><div class="line">            |_</div><div class="line">              ----------</div><div class="line">              home:</div><div class="line">                  /home/wilma</div><div class="line">            - present</div><div class="line">            |_</div><div class="line">              ----------</div><div class="line">              order:</div><div class="line">                  10000</div></pre></td></tr></table></figure></p>
+<p>应用state到本地：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div></pre></td><td class="code"><pre><div class="line">[root@centos7-B base]# salt-call state.sls user-wilma</div><div class="line">[INFO    ] Loading fresh modules for state activity</div><div class="line">[INFO    ] Fetching file from saltenv &apos;base&apos;, ** skipped ** latest already in cache &apos;salt://user-wilma.sls&apos;</div><div class="line">[INFO    ] Running state [wilma] at time 14:50:51.175126</div><div class="line">[INFO    ] Executing state user.present for wilma</div><div class="line">[INFO    ] Executing command [&apos;useradd&apos;, &apos;-u&apos;, &apos;2002&apos;, &apos;-m&apos;, &apos;-d&apos;, &apos;/home/wilma&apos;, &apos;wilma&apos;] in directory &apos;/root&apos;</div><div class="line">[INFO    ] Executing command [&apos;usermod&apos;, &apos;-c&apos;, &apos;Wilma Flintstone,,,&apos;, &apos;wilma&apos;] in directory &apos;/root&apos;</div><div class="line">[INFO    ] &#123;&apos;shell&apos;: &apos;/bin/bash&apos;, &apos;workphone&apos;: &apos;&apos;, &apos;uid&apos;: 2002, &apos;passwd&apos;: &apos;x&apos;, &apos;roomnumber&apos;: &apos;&apos;, &apos;groups&apos;: [&apos;wilma&apos;], &apos;home&apos;: &apos;/home/wilma&apos;, &apos;name&apos;: &apos;wilma&apos;, &apos;gid&apos;: 2002, &apos;fullname&apos;: &apos;Wilma Flintstone&apos;, &apos;homephone&apos;: &apos;&apos;&#125;</div><div class="line">[INFO    ] Completed state [wilma] at time 14:50:51.540919</div><div class="line">local:</div><div class="line">----------</div><div class="line">          ID: user_wilma</div><div class="line">    Function: user.present</div><div class="line">        Name: wilma</div><div class="line">      Result: True</div><div class="line">     Comment: New user wilma created</div><div class="line">     Started: 14:50:51.175126</div><div class="line">    Duration: 365.793 ms</div><div class="line">     Changes:   </div><div class="line">              ----------</div><div class="line">              fullname:</div><div class="line">                  Wilma Flintstone</div><div class="line">              gid:</div><div class="line">                  2002</div><div class="line">              groups:</div><div class="line">                  - wilma</div><div class="line">              home:</div><div class="line">                  /home/wilma</div><div class="line">              homephone:</div><div class="line">              name:</div><div class="line">                  wilma</div><div class="line">              passwd:</div><div class="line">                  x</div><div class="line">              roomnumber:</div><div class="line">              shell:</div><div class="line">                  /bin/bash</div><div class="line">              uid:</div><div class="line">                  2002</div><div class="line">              workphone:</div><div class="line"></div><div class="line">Summary</div><div class="line">------------</div><div class="line">Succeeded: 1 (changed=1)</div><div class="line">Failed:    0</div><div class="line">------------</div><div class="line">Total states run:     1</div></pre></td></tr></table></figure></p>
+<p>可见，这种配置在没有master的情况下，minion自己充当master，只是将master上的salt命令换成了minions上的salt-call命令，其它用法与在master上操作完全一致。上面是使用的state.sls将特定的state应用到本地，如果写了top.sls文件，可以像在master上一样，使用state.highstate来引用top文件里规定的states。</p>
+<blockquote>
+<p>在masterless minion的配置中，也可以不指定file_client为local，这样在使用salt-call命令时需要加上命令行参数<code>--local</code>，其效果与将file_client配置为local的效果相同。<strong>不过当在配置文件中指定了file_client为local后，salt master就不能再连接上此minion，使用时一定要注意</strong>。</p>
+</blockquote>
+<h3 id="在minion上配置grains"><a href="#在minion上配置grains" class="headerlink" title="在minion上配置grains"></a>在minion上配置grains</h3><p>在salt中，grains是存储在minions上的关于系统属性的一些信息，它可以帮助salt根据这些信息选择目标minions，通常它用来存储相对静态的数据。默认情况下，salt提供了许多grains信息，包括os、cup、内存、机器名等。然而我们也可以在minions上配置定制的grains信息，例如机器位置、服务器类型、应用程序名称、数据库等，这些定制信息使grains更加符合我们的需要。<br>有多种方法可以配置grains。首先可以在minion的默认配置文件/etc/salt/minion中配置；也可以将grains配置在一个单独的文件/etc/salt/grains中。无论哪种配置，grains都是以YAML键值对的形式配置的。这里我们以在/etc/salt/grains文件中配置grains举例：<br><figure class="highlight yaml"><figcaption><span>grains</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="attr">environment:</span> <span class="string">development</span></div><div class="line"><span class="attr">location:</span> <span class="string">datacenter1</span></div><div class="line"><span class="attr">server_type:</span> <span class="string">webserver</span></div></pre></td></tr></table></figure></p>
+<p>grains是为了存储静态信息的，如果grains的信息发生了变动或新的grains添加进来，必须要刷新minion来使master得到这些新的数据。这可以通过执行模块完成，不过现在直接重启salt-minion daemon就可以是这些新的数据可用。</p>
+<pre><code>[root@centos7-B salt]# systemctl restart salt-minion
+</code></pre><p>在master上通过命令grains.item得到grains的相关信息：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">[root@centos7-A ~]#  salt &apos;*&apos; grains.item environment location server_type</div><div class="line">minion:</div><div class="line">    ----------</div><div class="line">    environment:</div><div class="line">        development</div><div class="line">    location:</div><div class="line">        datacenter1</div><div class="line">    server_type:</div><div class="line">        webserver</div></pre></td></tr></table></figure></p>
+<p>也可以通过grains.items得到某个minion的所有grains：</p>
+<pre><code>[root@centos7-A ~]#  salt &apos;*&apos; grains.items
+...
+</code></pre><h3 id="从minions拉取master上的配置"><a href="#从minions拉取master上的配置" class="headerlink" title="从minions拉取master上的配置"></a>从minions拉取master上的配置</h3><p>前两篇文章都是在master上通过salt命令将state推送到minions上，state也可以在minion上通过salt-call命令从master上拉取过来。可以使用下面的命令：</p>
+<pre><code>[root@centos7-B ~]# salt-call state.highstate
+</code></pre><p>这里使用了只存在于minion上的salt-call命令，调用了state.highstate执行模块。然后minion将系统中所有需要的数据从master上缓存到本地，最后根据top.sls中的规则将特定环境下符合minion目标的特定state应用到本地。也可以使用另外一种方法应用某个state：</p>
+<pre><code>[root@centos7-B ~]# salt-call state.sls user saltenv=development
+</code></pre><p>这里仍然使用只存在于minion上的salt-call命令，但是使用了另外一个state.sls的执行模块，它可以指定应用某个特定的state（这里是名为user的state）到此minion上，最后的saltenv指定了state文件在master上的存放位置。如果不提供saltenv参数，系统会到base环境下寻找相关的state文件。<br>上面的命令是在minion上拉取了master上的state配置，然后应用到本地。salt-call命令还可以从master上拉取pillar数据：</p>
+<pre><code>[root@centos7-B ~]# salt-call pillar.get dev_user
+local:
+    ----------
+    comment:
+        Thomas
+    name:
+        thomas
+    password:
+        $1$PG1inys0$kB2I83KzEVzVs9G7xLHjA1
+    uid:
+        2001
+</code></pre><p>可以将salt命令与salt-call命令进行类比，它们非常类似，最大的不同就是salt命令只存在于master主机上，而salt-call命令只存在于minion主机上。</p>
+<p>本篇学习了salt minion的高级配置及grains，下篇看一下如何在state中使用grains数据。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/Salt/">Salt</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Salt/">Salt</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/10/15/salt-minion的高级配置及grains/" data-title="salt minion的高级配置及grains" data-url="https://andyyoung01.github.io/2016/10/15/salt-minion的高级配置及grains/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

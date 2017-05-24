@@ -1,0 +1,398 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>使用Source-to-image（S2I）构建镜像 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="使用Source-to-image（S2I）构建镜像"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-08-24T13:38:36.000Z"><a href="/2016/08/24/Source-to-image构建代码/">2016-08-24</a></time>
+        
+  
+    <h1 class="title">使用Source-to-image（S2I）构建镜像</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#创建你自己的S2I镜像"><span class="toc-text">创建你自己的S2I镜像</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-创建s2i环境"><span class="toc-text">1. 创建s2i环境</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-创建你的项目"><span class="toc-text">2. 创建你的项目</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-创建构建程序镜像"><span class="toc-text">3. 创建构建程序镜像</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-构建应用程序镜像"><span class="toc-text">4. 构建应用程序镜像</span></a></li></ol></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>我们可以通过Dockerfile来从头构建Docker镜像。然而，有其它选择来构建Docker镜像，使得对于Docker并不感兴趣的开发人员构建镜像更加方便，或者可以给构建过程提供更加强大的功能。使用Source-to-image（S2I）框架构建镜像便是其中的一种。</p>
+<a id="more"></a>
+<p>Source-to-image（S2I）是一种创建Docker镜像的架构，它可以通过将源代码放入一个单独定义的负责编译源代码的Docker镜像中，来将编译后的代码打包成docker镜像。<br>为什么会有这种构建方式呢？主要的原因是它允许应用程序开发人员对他们的代码进行更改，而不用知道Dockerfile或Docker镜像的细节。如果镜像交付给PaaS平台（application platform as a service），开发工程师并不需要理解Docker来对项目作出贡献。这在一个由很多人组成的企业环境中是非常有用的，这些人都有不同的专业方向，而且并不直接涉及到他们项目的构建过程。<br>下图显示了S2I的主要工作流程：<br><img src="/2016/08/24/Source-to-image构建代码/1.png" alt="“S2I的工作流程”" title="“S2I的工作流程”"><br>一旦上述流程建立起来，为了将源代码扩展到不同的环境，开发工程师只需要关心他们想要的对自己源代码的修改。所有其它的事情都由<code>s2i</code>工具驱动。<br>上述方式的优点可以分为下面几个方面：</p>
+<ul>
+<li><strong>灵活</strong>——此过程可以非常容易地插入到任何已经存在的软件交付流程中，并且它可以使用几乎任何的Docker镜像作为它的基础。</li>
+<li><strong>快速</strong>——此种构建方式可以比基于Dockerfile的构建方式更加快速，因为任何数量的复杂操作可以添加进构建流程而不用在每个步骤都创建一个新的层。S2I也提供了在不同的构建过程中重用构件的能力，这可以节省时间。</li>
+<li><strong>关注点分离</strong>——因为源代码和Docker镜像是清楚的分离开的，开发人员可以只关注代码，而基础设施人员可以关注Docker镜像和交付。因为代码和镜像是分离的，升级和修补更加容易交付。</li>
+<li><strong>安全</strong>——此过程可以限制在构建过程中的操作是由某个用户执行的，而不像Dockerfile允许以root用户执行任意命令。</li>
+</ul>
+<p>下面将展示如何使用这种方式进行代码的构建，虽然此处要构建的代码非常简单有限。此应用包括：</p>
+<ul>
+<li>源代码：只包含一行代码的shell脚本。</li>
+<li>构建程序s2i：它创建一个镜像，这个镜像包含上述代码，使其可执行，然后执行它。</li>
+</ul>
+<h3 id="创建你自己的S2I镜像"><a href="#创建你自己的S2I镜像" class="headerlink" title="创建你自己的S2I镜像"></a>创建你自己的S2I镜像</h3><p>创建S2I镜像需要如下几步：</p>
+<ol>
+<li>创建s2i环境，从github上下载安装<a href="https://github.com/openshift/source-to-image/releases/latest" target="_blank" rel="external">s2i程序</a>。</li>
+<li>创建你的项目。</li>
+<li>创建构建程序镜像。</li>
+<li>构建应用程序镜像。</li>
+</ol>
+<p>一旦创建好了构建镜像，修改和重新构建就比较容易了。</p>
+<h4 id="1-创建s2i环境"><a href="#1-创建s2i环境" class="headerlink" title="1. 创建s2i环境"></a>1. 创建s2i环境</h4><p>到<a href="https://github.com/openshift/source-to-image/releases/latest" target="_blank" rel="external">releases</a>页面下载与你机器环境一致的版本，然后使用tar解压缩安装包：</p>
+<pre><code>$ tar -xvf release.tar.gz.
+</code></pre><p>可以发现包中就是一个可执行文件s2i（还有一个sti的文件不再使用）。或者将s2i的位置加入到你的PATH环境变量，或者将其移动到已经在PATH中存在的目录中。这样就可以直接敲入<code>s2i</code>命令使用了。</p>
+<h4 id="2-创建你的项目"><a href="#2-创建你的项目" class="headerlink" title="2. 创建你的项目"></a>2. 创建你的项目</h4><p>选定一个目录，创建你自己的项目，可以是任何类型的项目。这里为了简单起见，在用户的家目录中新建myproject文件夹，作为项目的文件夹。然后在此文件夹下建立一个简单的脚本文件：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">mkdir ~/myproject</div><div class="line">cat &gt; ~/myproject/app.sh &lt;&lt;&lt; <span class="string">"echo 'Hello World!'"</span></div></pre></td></tr></table></figure></p>
+<h4 id="3-创建构建程序镜像"><a href="#3-创建构建程序镜像" class="headerlink" title="3. 创建构建程序镜像"></a>3. 创建构建程序镜像</h4><p>为了创建构建程序镜像，我们需要使用<code>s2i create</code>命令来为我们创建构建程序镜像的目录结构：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">s2i create new<span class="_">-s</span>2i-image new<span class="_">-s</span>2i-image</div><div class="line"><span class="built_in">cd</span> new<span class="_">-s</span>2i-image</div></pre></td></tr></table></figure></p>
+<p><code>s2i create</code>命令后的第一个参数为构建程序镜像的名称，第二个参数为在此目录下创建Dockerfile等构建程序镜像需要用到的相关文件、程序。进入该目录后，为了使工作流程运行起来，我们将注意如下几个文件：</p>
+<ul>
+<li>Makefile</li>
+<li>Dockerfile</li>
+<li>.sti/bin/assemble</li>
+<li>.sti/bin/run</li>
+</ul>
+<p>先来修改Dockerfile：<br><figure class="highlight bash"><figcaption><span>Dockerfile</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">FROM openshift/base-centos7</div><div class="line">COPY ./.s2i/bin/ /usr/libexec/s2i</div><div class="line">USER 1001</div></pre></td></tr></table></figure></p>
+<p>上面由s2i生成的Dockerfile里有许多注释文档可以参考，这里为了使流程运行起来使用了最小化的配置。<br>再来修改.sti/bin/assemble文件，这里只修改该文件的最后一行：<br><figure class="highlight bash"><figcaption><span>.sti/bin/assemble</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># <span class="doctag">TODO:</span> Add build steps for your application, eg npm install, bundle install</span></div><div class="line">chmod +x ./app.sh</div></pre></td></tr></table></figure></p>
+<p>上述文件负责取得源代码并编译代码，然后准备运行。这里只是给予了app.sh可执行权限，实际上可以根据注释中的描述，在里面填加实际的构建步骤。<br>最后是.sti/bin/run文件，同样只做最简单的修改：<br><figure class="highlight bash"><figcaption><span>.sti/bin/run</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">exec</span> ./app.sh</div></pre></td></tr></table></figure></p>
+<p>上面的文件负责程序的执行，它是最后构建好的镜像的默认运行的命令。<br>现在准备好了构建程序镜像的相关文件，可以运行make来创建S2I构建程序镜像了。它将创建一个名为new-s2i-image的镜像，此镜像中提供了可以编译你的应用程序的环境。</p>
+<h4 id="4-构建应用程序镜像"><a href="#4-构建应用程序镜像" class="headerlink" title="4. 构建应用程序镜像"></a>4. 构建应用程序镜像</h4><p>为了通过S2I构建应用程序镜像，现在需要三样东西：</p>
+<ul>
+<li>源代码</li>
+<li>构建程序镜像，此镜像提供了编译和运行源代码的环境</li>
+<li>s2i程序<br>通过前面的步骤，这三样东西都已经准备就绪，你可以使用s2i程序开始构建过程：<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ s2i build --force-pull=false --loglevel=1 myproject/ new-s2i-image my-hello-world-app</div><div class="line">Running S2I version &quot;v1.1.1&quot;</div><div class="line">Preparing to build my-hello-world-app</div><div class="line">Copying sources from &quot;/home/yangdong/myproject&quot; to &quot;/tmp/s2i112157938/upload/src&quot;</div><div class="line">Clean build will be performed</div><div class="line">Running &quot;assemble&quot; in &quot;my-hello-world-app&quot;</div><div class="line"></div><div class="line">---&gt; Installing application source...</div><div class="line">---&gt; Building application from source...</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>上面的例子中，源代码是通过本地目录得到的（参数myproject/），当然也可以提供一个git代码仓库的URL。最后一个参数my-hello-world-app指定了构建的镜像的名称，倒数第二个参数提供了构建程序镜像的名称。构建成功后，就可以通过容器运行该镜像：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ docker run my-hello-world-app</div><div class="line">Hello World!</div></pre></td></tr></table></figure></p>
+<p>有了一个可以运行的示例，就更容易理解这种构建方式的目的。假设你是一个新的开发人员，准备将你的代码贡献给项目。你可以很容易的修改源代码，然后通过一个简单的命令来重新构建镜像，而不需要对Docker有任何了解：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">cd</span> ~/myproject</div><div class="line">cat &gt; ~/myproject/app.sh &lt;&lt;&lt; <span class="string">"echo 'Hello S2I!'"</span></div><div class="line">s2i build --force-pull=<span class="literal">false</span> --loglevel=1 myproject/ new<span class="_">-s</span>2i-image my-S2I-app</div></pre></td></tr></table></figure></p>
+<p>运行修改后的新镜像：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ docker run my-S2I-app</div><div class="line">Hello S2I!</div></pre></td></tr></table></figure></p>
+<p>这个示例虽然简单，但说明了使用此框架，可以使开发人员关注于项目的源代码，而不用对构建Docker镜像的任何细节有了解。<br>其它技术也可以和此技术一起使用来推动DevOps流程。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/Docker/">Docker</a>, <a href="/categories/Docker/ImagesBuilding/">镜像构建</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Docker/">Docker</a>, <a href="/tags/ImagesBuilding/">镜像构建</a>, <a href="/tags/Source-to-image/">Source-to-image</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/08/24/Source-to-image构建代码/" data-title="使用Source-to-image（S2I）构建镜像" data-url="https://andyyoung01.github.io/2016/08/24/Source-to-image构建代码/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Apache Mesos(3)-Mesos的安装和配置 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Apache Mesos(3)-Mesos的安装和配置"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-07-27T09:50:55.000Z"><a href="/2016/07/27/Apache-Mesos-3-Mesos的安装和配置/">2016-07-27</a></time>
+        
+  
+    <h1 class="title">Apache Mesos(3)-Mesos的安装和配置</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Mesos集群的组件"><span class="toc-text">Mesos集群的组件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Mesos开发环境的配置"><span class="toc-text">Mesos开发环境的配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#安装Mesos和ZooKeeper"><span class="toc-text">安装Mesos和ZooKeeper</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#使用包管理器安装Mesos"><span class="toc-text">使用包管理器安装Mesos</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#RHEL-CENTOS-7"><span class="toc-text">RHEL/CENTOS 7</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#UBUNTU-14-04-TRUSTY"><span class="toc-text">UBUNTU 14.04 (TRUSTY)</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#从源代码编译、安装Mesos"><span class="toc-text">从源代码编译、安装Mesos</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#配置Mesos和ZooKeeper"><span class="toc-text">配置Mesos和ZooKeeper</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#ZooKeeper的配置"><span class="toc-text">ZooKeeper的配置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Mesos的配置"><span class="toc-text">Mesos的配置</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#master的配置"><span class="toc-text">master的配置</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#slave的配置"><span class="toc-text">slave的配置</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#启动服务"><span class="toc-text">启动服务</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#安装和配置Docker"><span class="toc-text">安装和配置Docker</span></a></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>前面的文章对Mesos的架构和基本概念做了简单的介绍，下面我们来看看怎样安装和配置一个Mesos cluster。虽然目前有很多的配置管理工具或者现成的docker镜像可用，但是使用公共可获取的安装包或者从源代码配置、编译你自己的安装包进行Mesos的安装，对于理解怎样部署Mesos是非常重要的。</p>
+<a id="more"></a>
+<h3 id="Mesos集群的组件"><a href="#Mesos集群的组件" class="headerlink" title="Mesos集群的组件"></a>Mesos集群的组件</h3><ul>
+<li>必须-<em>一个或多个Mesos masters。</em>（如果master的数量大于1，则必须是奇数个。）</li>
+<li>必须-<em>一个或多个Mesos slaves。</em>（通常来说，集群中节点的数目越多越好。）</li>
+<li>可选-<em>一个由一台或者多台机器组成的ZooKeeper集群。</em>只有部署高可用的Mesos集群时才需要。（如果ZooKeeper节点的数量大于1，则必须是奇数个。）</li>
+<li>可选-<em>在每个Mesos slave节点上安装有Docker引擎。</em></li>
+</ul>
+<h3 id="Mesos开发环境的配置"><a href="#Mesos开发环境的配置" class="headerlink" title="Mesos开发环境的配置"></a>Mesos开发环境的配置</h3><p>如果你需要安装配置开发环境，将Mesos各种组件全部安装到一台机器，一个比较简单的方法就是使用现成的Playa Mesos项目。假如你已经有了一个可以运行的Vagrant软件，则使Mesos开发环境运行起来是非常简单的：</p>
+<pre><code>$ git clone https://github.com/mesosphere/playa-mesos
+$ cd playa-mesos
+$ vagrant up --provision
+</code></pre><blockquote>
+<p>更多信息可以参考<a href="https://github.com/mesosphere/playa-mesos" target="_blank" rel="external">Playa Mesos project</a>。</p>
+</blockquote>
+<h3 id="安装Mesos和ZooKeeper"><a href="#安装Mesos和ZooKeeper" class="headerlink" title="安装Mesos和ZooKeeper"></a>安装Mesos和ZooKeeper</h3><p>由于Mesos安装的方式和支持的操作系统非常多，我们这里只考虑两种安装Mesos和ZooKeeper的安装方式：</p>
+<ul>
+<li>使用操作系统的包管理器</li>
+<li>从源代码编译，然后安装编译后的二进制可执行文件</li>
+</ul>
+<h4 id="使用包管理器安装Mesos"><a href="#使用包管理器安装Mesos" class="headerlink" title="使用包管理器安装Mesos"></a>使用包管理器安装Mesos</h4><h5 id="RHEL-CENTOS-7"><a href="#RHEL-CENTOS-7" class="headerlink" title="RHEL/CENTOS 7"></a>RHEL/CENTOS 7</h5><p>首先下载rpm安装包，用来添加Mesosphere的源：</p>
+<pre><code>$ sudo rpm -Uvh http://repos.mesosphere.io/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm
+</code></pre><p>在添加了安装源后，需要在master和slave上安装Mesos的包。<br>在master上，同时需要安装Mesosphere’s ZooKeeper的包：</p>
+<pre><code>$ sudo yum -y install mesos mesosphere-zookeeper
+</code></pre><p>在slave上，运行如下命令安装Mesos：</p>
+<pre><code>$ sudo yum -y install mesos
+</code></pre><h5 id="UBUNTU-14-04-TRUSTY"><a href="#UBUNTU-14-04-TRUSTY" class="headerlink" title="UBUNTU 14.04 (TRUSTY)"></a>UBUNTU 14.04 (TRUSTY)</h5><p>与在CentOS上安装类似，先添加安装源，之后在各个节点上安装Mesos的包。首先添加Mesosphere的key和源：</p>
+<pre><code>$ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv E56151BF
+$ echo &quot;deb http://repos.mesosphere.io/ubuntu trusty main&quot; |sudo tee /etc/apt/sources.list.d/mesosphere.list
+$ sudo apt-get update
+</code></pre><p>在master上，同时安装ZooKeeper：</p>
+<pre><code>$ sudo apt-get install mesos=0.22.2-0.2.62.ubuntu1404 zookeeperd
+</code></pre><p>在slave上，运行如下命令安装Mesos：</p>
+<pre><code>$ sudo apt-get install mesos=0.22.2-0.2.62.ubuntu1404
+</code></pre><h4 id="从源代码编译、安装Mesos"><a href="#从源代码编译、安装Mesos" class="headerlink" title="从源代码编译、安装Mesos"></a>从源代码编译、安装Mesos</h4><p>当你需要更改Mesos编译配置或者需要其它功能时，就需要使用编译安装的方法。关于编译安装，Mesos的官方网站上有详细的介绍，这里不再赘述。</p>
+<blockquote>
+<p>在Mesos的官方网站上，有如何进行编译安装的详细信息，请参考<a href="http://mesos.apache.org/gettingstarted/" target="_blank" rel="external">http://mesos.apache.org/gettingstarted/</a>.<br>Mesos完整的编译配置选项列表，可以在Mesos项目的文档部分查询到：<a href="http://mesos.apache.org/documentation/latest/configuration/" target="_blank" rel="external">http://mesos.apache.org/documentation/latest/configuration/</a>。</p>
+</blockquote>
+<h3 id="配置Mesos和ZooKeeper"><a href="#配置Mesos和ZooKeeper" class="headerlink" title="配置Mesos和ZooKeeper"></a>配置Mesos和ZooKeeper</h3><h4 id="ZooKeeper的配置"><a href="#ZooKeeper的配置" class="headerlink" title="ZooKeeper的配置"></a>ZooKeeper的配置</h4><p>假设我们安装了3个ZooKeeper节点，如果是通过包管理器进行的安装，配置文件应该在/etc/zoo-keeper/conf/zoo.cfg。该配置文件中已经有了基本的配置这注释，我们只需要将完成的ZooKeeper服务器和端口号加入到配置文件中。</p>
+<pre><code>server.1=mesos-master-1.example.com:2888:3888  
+server.2=mesos-master-2.example.com:2888:3888  
+server.3=mesos-master-3.example.com:2888:3888  
+</code></pre><p>上面的配置给每个服务器指定了一个唯一的ID，如：server.1，server.2等。另外，在每台机器上，需要在/var/lib/zookeeper下创建一个文件myid文件，这个文件里的唯一的内容应为1到255的整数，代表着某一个ZooKeeper节点的唯一ID。使用如下命令： echo 1| sudo tee /var/lib/zookeeper/myid在server.1上创建此文件，在其它服务器运行只需把1改为对应的ID号。</p>
+<blockquote>
+<p>需要注意的是，在某个节点上，在myid文件中配置的ID号必须与在zoo.cfg文件中指定的ID号一致。</p>
+</blockquote>
+<ul>
+<li>启动服务</li>
+</ul>
+<p>以上是必须的几乎最少的配置，不过也足够使集群启动并且给客户提供服务。<br>如果是使用的包管理器安装的服务，可以使用如下命令启动服务：service zookeeper start。<br>当服务启动完成后，我们可以使用Netcat来检查ZooKeeper服务的健康状态：</p>
+<pre><code>$ echo ruok | nc 127.0.0.1 2181
+imok
+</code></pre><p>如果上面的命令返回imok，说明ZooKeeper启动正常，可以为Mesos集群提供服务了。    </p>
+<blockquote>
+<p>关于ZooKeeper的更多信息，可以参阅<a href="http://zookeeper.apache.org/doc/current/zookeeperAdmin.pdf" target="_blank" rel="external">ZooKeeper管理员指南</a>。</p>
+</blockquote>
+<h4 id="Mesos的配置"><a href="#Mesos的配置" class="headerlink" title="Mesos的配置"></a>Mesos的配置</h4><p>根据Mesos安装方式的不同，配置Mesos也有多种方式：</p>
+<ul>
+<li>基于文件-当使用包管理器安装时，配置文件一般都在/etc/mesos、/etc/mesos-master及/etc/mesos-slave这几个位置。</li>
+<li>基于环境变量-不管是包管理器安装还是编译安装，都可以使用基于环境变量的配置。在mesos-master或mesos-slave启动时，会读取这些环境变量的值。例如： MESOS_zk=”zk://…”。</li>
+<li>基于命令行参数-配置值可以以参数的形式传递给mesos-master或mesos-slave可执行程序或service脚本。例如： mesos-master –zk=zk://…。</li>
+</ul>
+<h5 id="master的配置"><a href="#master的配置" class="headerlink" title="master的配置"></a>master的配置</h5><p>为了使master正常工作，有三个必须配置的变量：<em>ZooKeeper URL（zk），quorum，和work_dir</em>。</p>
+<ul>
+<li><p>ZooKeeper URL以如下方式指定：</p>
+<p>  zk://mesos-master-1.example.com:2181,mesos-master-2.example.com:2181,mesos-master-3.example.com:2181/mesos</p>
+</li>
+<li>quorum（法定人数）：需要大于master数目的1/2。</li>
+<li>work_dir(工作目录)：此目录用于Mesos master的工作目录，没有默认设置，/var/lib/mesos是一个较好的选择。</li>
+</ul>
+<p>如果把上面的配置都作为环境变量，可以使用类似于如下的命令：</p>
+<pre><code>$ export MESOS_zk=zk://mesos-master-1.example.com:2181,mesos-master-2.example.com:2181,mesos-master-3.example.com:2181/mesos
+$ export MESOS_quorum=2
+$ export MESOS_work_dir=/var/lib/mesos
+$ export MESOS_log_dir=/var/log/mesos
+</code></pre><h5 id="slave的配置"><a href="#slave的配置" class="headerlink" title="slave的配置"></a>slave的配置</h5><p>为了使slave正常工作，有两个必须配置的变量：<em>master和work_dir</em>。</p>
+<ul>
+<li>master：它的值配置为ZooKeeper URL（zk），用于Mesos slave探测哪个是leading master并且连接到那。配置的方式同上。</li>
+<li>work_dir(工作目录)：此目录作为Mesos frameworks的工作目录和sandboxes（沙箱），没有默认值，使用/var/lib/mesos是一个不错的选择。</li>
+</ul>
+<p>如果把上面的配置都作为环境变量，可以使用类似于如下的命令：</p>
+<pre><code>$ export MESOS_master=zk://mesos-master-1.example.com:2181,mesos-master-2.example.com:2181,mesos-master-3.example.com:2181/mesos
+$ export MESOS_work_dir=/var/lib/mesos
+$ export MESOS_log_dir=/var/log/mesos
+</code></pre><p>以上的配置基本上是可以使Mesos集群工作的最小配置。</p>
+<blockquote>
+<p>关于Apache Mesos cluster的完整配置选项，请参考Mesos的官方文档<a href="http://mesos.apache.org/documentation/latest/configuration/" target="_blank" rel="external">http://mesos.apache.org/documentation/latest/configuration/</a>。</p>
+</blockquote>
+<h5 id="启动服务"><a href="#启动服务" class="headerlink" title="启动服务"></a>启动服务</h5><p>上面的配置都完成之后，可以使用如下命令启动master和slave：</p>
+<pre><code>$ sudo service mesos-master start
+$ sudo service mesos-slave start
+</code></pre><p>如果使用命令行启动的话，需要如下命令：</p>
+<pre><code>$ sudo mesos-master --zk=zk://192.168.71.167:2181,192.168.71.168:2181,192.168.71.169:2181/mesos --port=5050 --log_dir=/var/log/mesos --quorum=2 --work_dir=/var/lib/mesos
+$ sudo mesos-slave --master=zk://192.168.71.167:2181,192.168.71.168:2181,192.168.71.169:2181/mesos --log_dir=/var/log/mesos --work_dir=/var/lib/mesos
+</code></pre><h3 id="安装和配置Docker"><a href="#安装和配置Docker" class="headerlink" title="安装和配置Docker"></a>安装和配置Docker</h3><p>在Mesos slave上，可以使用Mesos原生的containerizer（使用Linux cgroups），也可以选择使用Docker。关于Docker的安装和配置，这里不做过多赘述，请参考<a href="https://docs.docker.com/engine/installation/" target="_blank" rel="external">Docker的官方文档</a>，这里主要列出怎样配置Mesos slave使用Docker。<br>当完成Docker的安装和配置后，需要修改Mesos slave上的containerizers列表，并增大executor注册的超时时间，以便使Docker有足够的时间来拉取镜像。如果使用基于文件的配置，使用如下命令：</p>
+<pre><code>$ echo &quot;docker,mesos&quot; | sudo tee /etc/mesos-slave/containerizers
+$ echo &quot;5mins&quot; | sudo tee /etc/mesos-slave/executor_registration_timeout
+</code></pre><p>到目前为止，我们对Mesos有了一个基本的认识，后面我们更加深入得了解一下Mesos。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/DistributedSystems/">分布式系统</a>, <a href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Apache-mesos/">Apache mesos</a>, <a href="/tags/DistributedSystems/">分布式系统</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/07/27/Apache-Mesos-3-Mesos的安装和配置/" data-title="Apache Mesos(3)-Mesos的安装和配置" data-url="https://andyyoung01.github.io/2016/07/27/Apache-Mesos-3-Mesos的安装和配置/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

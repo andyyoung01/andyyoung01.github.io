@@ -1,0 +1,403 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>通过salt cloud在云端批量部署计算节点 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="通过salt cloud在云端批量部署计算节点"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-10-25T13:16:00.000Z"><a href="/2016/10/25/通过salt-cloud在云端批量部署计算节点/">2016-10-25</a></time>
+        
+  
+    <h1 class="title">通过salt cloud在云端批量部署计算节点</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#salt-cloud的安装"><span class="toc-text">salt-cloud的安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#salt-cloud的配置文件"><span class="toc-text">salt-cloud的配置文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#AWS-EC2配置实例"><span class="toc-text">AWS EC2配置实例</span></a></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>如果需要进行大数据处理，就需要有多个计算节点的支持。如何快速部署成百上千的计算节点便成为一个急需解决的问题。而公有云省去了我们架设物理服务器的工作，剩下的就是在公有云上如何快速部署大量计算节点的问题。通过salt cloud可以完美地解决此问题。</p>
+<a id="more"></a>
+<p>Salt cloud支持管理很多公有云，包括阿里云，AWS，GCE等，本文主要介绍如何借助Salt Cloud配置亚马逊弹性计算云（EC2）实例。</p>
+<h3 id="salt-cloud的安装"><a href="#salt-cloud的安装" class="headerlink" title="salt-cloud的安装"></a>salt-cloud的安装</h3><p>可以通过salt的bootstrap脚本进行安装。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">[ec2-user@ip-172-31-17-221 ~]$ curl -o bootstrap_salt.sh -L https://bootstrap.saltstack.com</div><div class="line">[ec2-user@ip-172-31-17-221 ~]$ sudo sh bootstrap_salt.sh git v2016.3.3</div><div class="line">[ec2-user@ip-172-31-17-221 ~]$ sudo yum install salt-master</div><div class="line">[ec2-user@ip-172-31-17-221 ~]$ sudo service salt-master start</div></pre></td></tr></table></figure></p>
+<p>上面的第1、2行命令通过salt的bootstrap脚本安装salt的v2016.3.3版本。此例子是在EC2的实例上运行的安装脚本，它使用的Linux发行版为Amazon Linux，其包管理器同Redhat系列发行版一样，也是yum。由于已经运行过bootstrap脚本，saltstack的安装源便加入了系统。第3行命令通过yum在此机器上安装了salt-master。最后将salt-master的服务启动。</p>
+<h3 id="salt-cloud的配置文件"><a href="#salt-cloud的配置文件" class="headerlink" title="salt-cloud的配置文件"></a>salt-cloud的配置文件</h3><ul>
+<li><code>/etc/salt/cloud</code>: 此文件是salt-cloud的基础配置文件。也可以通过将配置文件放置在<code>/etc/salt/cloud.conf.d</code>文件夹内，文件名以conf作为扩展来实现对salt-cloud的配置。在此文件中包含salt-cloud的一些核心配置参数，例如pool_size，决定了当salt-cloud使用-P参数时，salt cloud操作的VMs的数量。此文件也可以包含一些关于minion的配置信息。或者是关于云供应商的一些配置参数。然而如果将所有配置信息放置在一个文件中，会导致配置文件过于庞大，难于维护，所以一些相关的配置分散到其它的配置文件中，使可读性和维护性更强。</li>
+<li><code>/etc/salt/cloud.providers</code>: 此文件包含云供应商相关的配置参数，如一些认证信息，密钥的名称和位置，可用区等。类似地，可以将配置文件放置在<code>/etc/salt/cloud.providers.d</code>文件夹中，以conf作为文件名扩展。</li>
+<li><code>/etc/salt/cloud.profiles</code>: 此文件包含云供应商的更多的一些参数，主要包括用来配置云主机实例的一些参数。同样，<code>/etc/salt/cloud.profiles.d</code>文件夹可以包含不同的配置文件。</li>
+<li><code>/etc/salt/cloud.map</code>: 此文件包含使用哪个profile的配置信息启动哪个实例。当使用多个云供应商时，可以对每个云供应商创建一个文件，这样就可以集中管理各个不同云供应商上的实例。</li>
+</ul>
+<blockquote>
+<p>官方文档的位置为<a href="https://docs.saltstack.com/en/latest/topics/cloud/index.html#configuration" target="_blank" rel="external">https://docs.saltstack.com/en/latest/topics/cloud/index.html#configuration</a>。</p>
+</blockquote>
+<h3 id="AWS-EC2配置实例"><a href="#AWS-EC2配置实例" class="headerlink" title="AWS EC2配置实例"></a>AWS EC2配置实例</h3><p>在了解了salt-cloud的安装和配置文件后，我们来实际应用一下。这个示例在aws的EC2实例上安装了salt-cloud，也安装了salt-master，通过salt-cloud批量部署4个计算节点，可用区a有2个节点，可用区b有2个节点。节点部署后，将自动在这些节点上安装salt-minion并且连接到刚才部署这些节点使用的salt-cloud节点的salt-master上。下面看一下几个配置文件中的内容：<br><figure class="highlight yaml"><figcaption><span>/etc/salt/cloud.providers.d/aws.conf</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="attr">ec2_us_west_2:</span></div><div class="line"></div><div class="line"><span class="attr">  id:</span> <span class="string">&lt;access_key&gt;</span></div><div class="line"><span class="attr">  key:</span> <span class="string">&lt;secret_key&gt;</span></div><div class="line"></div><div class="line"><span class="attr">  keyname:</span> <span class="string">common</span></div><div class="line"><span class="attr">  private_key:</span> <span class="string">/etc/salt/key/common.pem</span></div><div class="line"></div><div class="line"><span class="attr">  location:</span> <span class="string">us-west-2</span></div><div class="line"><span class="attr">  availability_zone:</span> <span class="string">us-west-2b</span></div><div class="line"><span class="attr">  size:</span> <span class="string">t2.micro</span></div><div class="line"><span class="attr">  del_root_vol_on_destroy:</span> <span class="literal">True</span></div><div class="line"><span class="attr">  ssh_username:</span> <span class="string">ec2-user</span></div><div class="line"><span class="attr">  rename_on_destroy:</span> <span class="literal">True</span></div><div class="line">  </div><div class="line"><span class="attr">  driver:</span> <span class="string">ec2</span></div></pre></td></tr></table></figure></p>
+<p>上述文件第1行为provider的名称，其它配置文件可以根据此名称引用到这个provider。<br>第3、4行提供了用于访问AWS EC2的id和key。这个id和key可以在AWS的IAM控制台获取或设置。<br>第6、7行提供了用于登录新创建的minion的key的名称和文件位置。这个key是在AWS EC2的控制面板的密钥对页面生成的，生成后将密钥从AWS下载到本地的相应位置，并修改文件的权限为0400。<br>第9-14行指定了新建实例相关的参数，例如地点、可用区、实例大小等内容。<br>第16行指定了此配置文件所用的driver。旧版本的salt-cloud此字段为provider，新版本此字段修改为driver。这里是针对于AWS EC2进行的配置，所以指定的driver为EC2，配置文件中的很多配置选项都是EC2专有的。如果指定的是其它的driver，则配置文件中的内容针对于其它相应的公有云。<br><figure class="highlight yaml"><figcaption><span>/etc/salt/cloud.profiles.d/aws-profile.conf</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line"><span class="attr">ec2_prod_common_app:</span></div><div class="line"><span class="attr">  provider:</span> <span class="string">ec2_us_west_2</span></div><div class="line"><span class="attr">  minion:</span></div><div class="line"><span class="attr">    master:</span> <span class="string">ip-172-31-17-221.us-west-2.compute.internal</span></div><div class="line"><span class="attr">    environment:</span> <span class="string">production</span></div><div class="line"><span class="attr">  grains:</span></div><div class="line"><span class="attr">    server_type:</span> <span class="string">app</span></div><div class="line"><span class="attr">    environment:</span> <span class="string">production</span></div><div class="line"><span class="attr">  tag:</span> <span class="string">&#123;'Environment':</span> <span class="string">'Production'</span><span class="string">,</span> <span class="string">'Role'</span><span class="string">:</span> <span class="string">'Application'</span><span class="string">&#125;</span></div><div class="line"><span class="attr">  image:</span> <span class="string">ami-b04e92d0</span></div><div class="line"><span class="attr">  script:</span> <span class="string">bootstrap-salt</span></div><div class="line"><span class="attr">  sync_after_install:</span> <span class="string">all</span></div><div class="line">  </div><div class="line"><span class="attr">  ssh_interface:</span> <span class="string">private_ips</span></div><div class="line">  </div><div class="line"><span class="attr">ec2_prod_app_us-west-2b:</span></div><div class="line"><span class="attr">  availability_zone:</span> <span class="string">us-west-2b</span></div><div class="line"><span class="attr">  network_interfaces:</span></div><div class="line"><span class="attr">    - DeviceIndex:</span> <span class="number">0</span></div><div class="line"><span class="attr">      AssociatePublicIpAddress:</span> <span class="literal">True</span></div><div class="line"><span class="attr">      SubnetId:</span> <span class="string">subnet-91bc18e7</span></div><div class="line"><span class="attr">      SecurityGroupId:</span></div><div class="line"><span class="bullet">        -</span> <span class="string">sg-8da950eb</span></div><div class="line"><span class="attr">  extends:</span> <span class="string">ec2_prod_common_app</span></div><div class="line"></div><div class="line"><span class="attr">ec2_prod_app_us-west-2a:</span></div><div class="line"><span class="attr">  availability_zone:</span> <span class="string">us-west-2a</span></div><div class="line"><span class="attr">  network_interfaces:</span></div><div class="line"><span class="attr">    - DeviceIndex:</span> <span class="number">0</span></div><div class="line"><span class="attr">      AssociatePublicIpAddress:</span> <span class="literal">True</span></div><div class="line"><span class="attr">      SubnetId:</span> <span class="string">subnet-9422a0f0</span></div><div class="line"><span class="attr">      SecurityGroupId:</span></div><div class="line"><span class="bullet">        -</span> <span class="string">sg-8da950eb</span></div><div class="line"><span class="attr">  extends:</span> <span class="string">ec2_prod_common_app</span></div></pre></td></tr></table></figure></p>
+<p>上述配置文件配置了三个profile。一个名为ec2_prod_common_app，一个针对于可用区a，另一个针对于可用区b。针对于可用区a或b的profile使用了<code>extends</code>关键字，表明这个profile是扩展自ec2_prod_common_app的profile的，所有在common中配置的字段在a或b的profile中都可用，并且可以重写相同字段名称的配置。<br>下面逐行看一下该配置文件。第1、16、26行为三个profile的名称。在第一个profile中，第2行字段provider表明这个profile继承了上面配置的provider中的各项配置。<br>第3-8行配置了新建的minion中minion配置文件的内容和grains配置文件的内容。<br>第9行tag的内容指定了AWS中EC2节点包含的标签信息，使用这些信息更容易在AWS众多的资源中进行定位。<br>第10行指定了AWS EC2中的image id，根据此id，可以确定创建minion时所用的操作系统镜像。<br>第11行指定了创建minion后需要运行的脚本，此脚本的一般位置在/usr/lib/python2.6/site-packages/salt/cloud/deploy/，它用于在minion上安装部署salt相关的可执行程序。<br>第12行确保在安装后salt的各种模块如grains、pillars等从master同步到minions上。<br>第14行指明是使用公有ip地址还是使用私有ip地址来传输部署脚本。如果salt-cloud命令是运行在EC2节点内则使用private_ips，如果是运行在EC2节点之外则使用public_ips。<br>再来看两个针对于不同可用区配置的profile。<br>第17、27行的可用区覆盖了之前在provider中配置的可用区，针对于这两个profile使用不同的可用区。<br>剩下的配置主要用来配置minion上的网络接口。<code>AssociatePublicIpAddress</code>字段指定了当minions启动后，是否为其分配公有ip地址。如果指定为True，就为其指定了公有ip，可以在EC2之外访问到该实例。<code>SubnetId</code>指定了该网络接口所在的VPC的id，其值可以通过AWS VPC控制台获取或设置。<code>SecurityGroupId</code>指定了该网络接口所在的安全组id，其值可以通过EC2控制台的安全组里获取或设置。<br><figure class="highlight yaml"><figcaption><span>/etc/salt/cloud.map/aws.map</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="attr">ec2_prod_app_us-west-2a:</span></div><div class="line"><span class="bullet">  -</span> <span class="string">app01</span></div><div class="line"><span class="bullet">  -</span> <span class="string">app03</span></div><div class="line"><span class="attr">ec2_prod_app_us-west-2b:</span></div><div class="line"><span class="bullet">  -</span> <span class="string">app02</span></div><div class="line"><span class="bullet">  -</span> <span class="string">app04</span></div></pre></td></tr></table></figure></p>
+<p>上面的map文件指定了哪个minions使用哪个profile下的配置。</p>
+<p>上面的配置都完成后，可以通过下面的命令来创建minions：</p>
+<pre><code>[root@ip-172-31-17-221 salt]# salt-cloud -m /etc/salt/cloud.maps.d/aws.map -P
+The following virtual machines are set to be created:
+  app01
+  app02
+
+Proceed? [N/y] y
+... proceeding
+[ERROR   ] Public IP not detected.  If private IP is meant for bootstrap you must specify &quot;ssh_interface: private_ips&quot; in your profile.
+[ERROR   ] Public IP not detected.  If private IP is meant for bootstrap you must specify &quot;ssh_interface: private_ips&quot; in your profile.
+app01:
+    ----------
+    amiLaunchIndex:
+        0
+    architecture:
+        x86_64
+...        
+app02:
+    ----------
+    amiLaunchIndex:
+        0
+    architecture:
+        x86_64
+...
+</code></pre><p>创建完成后，测试一下是否可以连接到这些新创建的minions上：</p>
+<pre><code>[root@ip-172-31-17-221 salt]# salt \* test.ping
+app01:
+    True
+app02:
+    True
+app03:
+    True
+app04:
+    True
+</code></pre><p>到此，完成了AWS EC2的批量创建。如果需要更多的minions，只需要编辑map文件加入更多得主机。<br>可以通过下面的命令删除新创建的minions：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">[root@ip-172-31-17-221 salt]# salt-cloud -m /etc/salt/cloud.maps.d/aws.map -d</div><div class="line">The following virtual machines are set to be destroyed:</div><div class="line">  ec2_us_west_2:</div><div class="line">    ec2:</div><div class="line">      app01</div><div class="line">      app02</div><div class="line"></div><div class="line">Proceed? [N/y] y</div><div class="line">... proceeding</div><div class="line">ec2_us_west_2:</div><div class="line">    ----------</div><div class="line">    ec2:</div><div class="line">        ----------</div><div class="line">        app01:</div><div class="line">            ----------</div><div class="line">...</div><div class="line">        app02:</div><div class="line">            ----------</div><div class="line">...</div></pre></td></tr></table></figure></p>
+<p>可见，通过salt-cloud可以在公有云上快速批量部署计算节点。如果通过传统的物理服务器来部署包含几十个节点的集群，通常需要不少的时间，而通过salt cloud工具，部署包含几十台上百台节点的集群基本上不到半天就可以完成。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/Salt/">Salt</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Salt-cloud/">Salt cloud</a>, <a href="/tags/AWS/">AWS</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/10/25/通过salt-cloud在云端批量部署计算节点/" data-title="通过salt cloud在云端批量部署计算节点" data-url="https://andyyoung01.github.io/2016/10/25/通过salt-cloud在云端批量部署计算节点/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

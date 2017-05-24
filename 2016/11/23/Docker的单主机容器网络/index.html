@@ -1,0 +1,489 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Docker的单主机容器网络 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Docker的单主机容器网络"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-11-23T14:10:32.000Z"><a href="/2016/11/23/Docker的单主机容器网络/">2016-11-23</a></time>
+        
+  
+    <h1 class="title">Docker的单主机容器网络</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Docker的网络模式"><span class="toc-text">Docker的网络模式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#None"><span class="toc-text">None</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Bridge"><span class="toc-text">Bridge</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Host"><span class="toc-text">Host</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Container"><span class="toc-text">Container</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#User-defined-network"><span class="toc-text">User-defined network</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Docker的network命令"><span class="toc-text">Docker的network命令</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#创建网络"><span class="toc-text">创建网络</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#连接容器"><span class="toc-text">连接容器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#断开容器连接"><span class="toc-text">断开容器连接</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#移除一个网络"><span class="toc-text">移除一个网络</span></a></li></ol></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>本篇文章主要探索Docker的单机容器网络，了解一下单个Docker主机上网络的各种模式，从而为后续理解跨主机容器网络打下基础。</p>
+<a id="more"></a>
+<p>Docker默认容器网络的建立和控制是一种结合了network namespace，iptables，Linux网桥及route table等多种技术的综合解决方案，本篇主要针对于如何使用单主机网络的各种模式，对于实现细节不做过多的探索（这篇文章<a href="http://tonybai.com/2016/01/15/understanding-container-networking-on-single-host/" target="_blank" rel="external">http://tonybai.com/2016/01/15/understanding-container-networking-on-single-host/</a>对于docker单主机网络的实现机制做了详细的探索）。</p>
+<h3 id="Docker的网络模式"><a href="#Docker的网络模式" class="headerlink" title="Docker的网络模式"></a>Docker的网络模式</h3><p>Docker支持的网络模式主要有如下几种：<br><img src="/2016/11/23/Docker的单主机容器网络/2.png" alt="“Docker Supported Networks”" title="“Docker Supported Networks”"></p>
+<h4 id="None"><a href="#None" class="headerlink" title="None"></a>None</h4><p>启动容器时，使用了参数<code>--network=&quot;none&quot;</code>。在此种模式下，容器和外部网络没有连接。在容器中只有loopback的网络接口，但它没有对外的任何路由。</p>
+<h4 id="Bridge"><a href="#Bridge" class="headerlink" title="Bridge"></a>Bridge</h4><p>启动容器时，使用了参数<code>--network=&quot;bridge&quot;</code>或者未指定此参数。这是docker默认的网络模式。它允许此主机上的容器彼此进行通信，也允许容器访问主机的外部网络。下图显示了Docker bridge网络的示意图：<br><img src="/2016/11/23/Docker的单主机容器网络/1.png" alt="“Docker Bridge Network”" title="“Docker Bridge Network”"><br>在主机上，docker创建了一个通常名为docker0的网桥，这里它的ip设置为172.17.0.1.在创建每个容器时，同时创建了一对veth网络接口。接口的一端连接到docker0的网桥上，另一端连接到容器的内部。从容器发起的到外部网络的连接是通过IP forwarding和设置了NAT规则的iptables rules实现的（图中的绿色箭头）。从外部网络到容器内部的连接使用了一条完全不同的路径。如果容器将自身的端口映射到主机上，则docker会启动一个docker-proxy进程来进行监听，通过此proxy将数据转发到容器中（图中的红色箭头）。<br>默认情况下，同一台docker主机上的容器彼此之间可以通过他们的IP地址进行通信。如果需要通过容器的主机名进行通信，容器之间必须设置了link。</p>
+<h4 id="Host"><a href="#Host" class="headerlink" title="Host"></a>Host</h4><p>启动容器时，使用了参数<code>--network=&quot;host&quot;</code>。在这种模式下，容器共享主机的networking namespace，所以主机上的网络接口对容器都可用，同时在bridge模式下docker所做的各种网络设置都被略过，这意味着容器的网络性能和普通的主机网络性能<strong>一样快</strong>。在运行一些对网络性能要求较高的应用时，如负载均衡器或高性能web服务器时，应使用此模式。<br>但此模式给予容器对本地系统服务的完全访问权限，所以比其它模式的安全性要差。</p>
+<h4 id="Container"><a href="#Container" class="headerlink" title="Container"></a>Container</h4><p>启动容器时，使用了参数<code>--network=&quot;container:&lt;name|id&gt;&quot;</code>。这种模式下容器使用了另外一个容器的networking namespace，也就是说它与另外一个容器共享网络栈。</p>
+<h4 id="User-defined-network"><a href="#User-defined-network" class="headerlink" title="User-defined network"></a>User-defined network</h4><p>在这种模式下，用户可以使用Docker网络驱动或外部网络驱动plugin来创建自定义的网络。用户可以将多个容器连接到同一个网络上。一旦容器连接到用户自定义的网络后，容器可以使用另外一个容器的ip地址<strong>或名称</strong>来彼此通信。此功能需要Docker 1.10之后的版本。在较新版本的docker daemon中内置了一个DNS服务器，对于任意在创建时指定了name或net-alias或通过link提供了别名的容器，它可以提供内置的<strong>服务发现功能</strong>，从而无需再使用第三方软件提供的DNS服务（无需再使用文章“<a href="/2016/09/12/使用resolvable通过DNS查找容器/" title="使用resolvable通过DNS查找容器">使用resolvable通过DNS查找容器</a>”中提供的方法）。<br>对于overlay网络或使用了支持多主机连接的插件的容器，连接到同一多主机网络但从不同主机上启动的容器也可以彼此之间以这种方式通信。</p>
+<h3 id="Docker的network命令"><a href="#Docker的network命令" class="headerlink" title="Docker的network命令"></a>Docker的network命令</h3><p>Docker的network命令既可以用于单主机网络的相关操作，也可以用于多主机overlay网络的操作，本篇主要使用其与单主机网络相关的命令。</p>
+<h4 id="创建网络"><a href="#创建网络" class="headerlink" title="创建网络"></a>创建网络</h4><p>当在主机上安装docker后，docker引擎自动创建三个网络，可用如下命令列出默认的三个网络：</p>
+<pre><code>[yangdong@centos7 ~]$ docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+2a820cde1d0c        bridge              bridge              local               
+54be0bc791bf        host                host                local               
+8488a8a4ca59        none                null                local 
+</code></pre><p>除此之外，用户还可以创建自己的bridge或overlay的网络。如果运行<code>docker network create</code>命令并且指定一个网络名称，则此命令为用户创建一个bridge网络：</p>
+<pre><code>[yangdong@centos7 ~]$ docker network create simple-network
+a88875cc258fb24bbf55db67efefd05976dc8d1a8e25a2166a1acbd1dc9e125a
+[yangdong@centos7 ~]$ docker network inspect simple-network
+[
+    {
+        &quot;Name&quot;: &quot;simple-network&quot;,
+        &quot;Id&quot;: &quot;a88875cc258fb24bbf55db67efefd05976dc8d1a8e25a2166a1acbd1dc9e125a&quot;,
+        &quot;Scope&quot;: &quot;local&quot;,
+        &quot;Driver&quot;: &quot;bridge&quot;,
+        &quot;EnableIPv6&quot;: false,
+        &quot;IPAM&quot;: {
+            &quot;Driver&quot;: &quot;default&quot;,
+            &quot;Options&quot;: {},
+            &quot;Config&quot;: [
+                {
+                    &quot;Subnet&quot;: &quot;172.18.0.0/16&quot;,
+                    &quot;Gateway&quot;: &quot;172.18.0.1/16&quot;
+                }
+            ]
+        },
+        &quot;Internal&quot;: false,
+        &quot;Containers&quot;: {},
+        &quot;Options&quot;: {},
+        &quot;Labels&quot;: {}
+    }
+]
+</code></pre><h4 id="连接容器"><a href="#连接容器" class="headerlink" title="连接容器"></a>连接容器</h4><p>可以将容器动态得连接到一个或多个网络上。一旦连接后，容器可以通过其它容器的ip地址或名称进行通信。下面看一下例子：<br>首先创建两个容器：</p>
+<pre><code>[yangdong@centos7 ~]$ docker run -itd --name=container1 busybox
+bdaadbef1c5b3a53c1cf54ddda70e170e386fc578c815f07b09d21ca2fcd3b20
+[yangdong@centos7 ~]$ docker run -itd --name=container2 busybox
+126cf3af1ddd033a0925ca879e8d744293cb95949d560877ca630a29b4630630
+</code></pre><p>然后创建一个隔离的bridge的网络用于测试：</p>
+<pre><code>[yangdong@centos7 ~]$ docker network create -d bridge --subnet 172.25.0.0/16 isolated_nw
+38159357c0979fdbc6ca0be29475867115e002ef27d8f79fee014b03ffd86b8d
+</code></pre><p>这里通过命令行参数<code>--subnet</code>指定了容器使用的子网网段。下面将container2连接到刚才创建的网络上：</p>
+<pre><code>[yangdong@centos7 ~]$ docker network connect isolated_nw container2
+</code></pre><p>然后启动第三个容器，在启动的同时将其连接到isolated_nw网络上，同时手动指定该容器的ip：</p>
+<pre><code>[yangdong@centos7 ~]$ docker run --network=isolated_nw --ip=172.25.3.3 -itd --name=container3 busybox
+d649491fd218c65fb0dc26aa79cb0d6f43dabac2bdc2f404c515f97042e60206
+</code></pre><p>只要容器连接到一个由用户指定子网网段（通过<code>--subnet</code>）的网络上时，就可以为容器指定ip地址。<br>上述命令运行完毕后，整个主机上的网络状态如下图所示：<br>{% asset_img 3.png %}<br>使用docker attach命令连接到运行的container2容器内部并查看其网络栈：</p>
+<pre><code>[yangdong@centos7 ~]$ docker attach container2
+/ # ifconfig
+eth0      Link encap:Ethernet  HWaddr 02:42:AC:11:00:05  
+        inet addr:172.17.0.5  Bcast:0.0.0.0  Mask:255.255.0.0
+        inet6 addr: fe80::42:acff:fe11:5/64 Scope:Link
+        UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+        RX packets:9 errors:0 dropped:0 overruns:0 frame:0
+        TX packets:8 errors:0 dropped:0 overruns:0 carrier:0
+        collisions:0 txqueuelen:0 
+        RX bytes:718 (718.0 B)  TX bytes:648 (648.0 B)
+
+eth1      Link encap:Ethernet  HWaddr 02:42:AC:19:00:02  
+        inet addr:172.25.0.2  Bcast:0.0.0.0  Mask:255.255.0.0
+        inet6 addr: fe80::42:acff:fe19:2/64 Scope:Link
+        UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+        RX packets:32 errors:0 dropped:0 overruns:0 frame:0
+        TX packets:8 errors:0 dropped:0 overruns:0 carrier:0
+        collisions:0 txqueuelen:0 
+        RX bytes:3282 (3.2 KiB)  TX bytes:648 (648.0 B)
+
+lo        Link encap:Local Loopback  
+        inet addr:127.0.0.1  Mask:255.0.0.0
+        inet6 addr: ::1/128 Scope:Host
+        UP LOOPBACK RUNNING  MTU:65536  Metric:1
+        RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+        TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+        collisions:0 txqueuelen:0 
+        RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+</code></pre><p>可见eth0连接到了默认的bridge网络，eth1连接到了用户创建的isolated_nw网络，此网络可以通过docker内置的DNS服务器进行其它容器的名称解析，所以在container2中可以通过名称ping通container3：</p>
+<pre><code>/ # ping -w 4 container3
+PING container3 (172.25.3.3): 56 data bytes
+64 bytes from 172.25.3.3: seq=0 ttl=64 time=0.146 ms
+64 bytes from 172.25.3.3: seq=1 ttl=64 time=0.113 ms
+64 bytes from 172.25.3.3: seq=2 ttl=64 time=0.100 ms
+64 bytes from 172.25.3.3: seq=3 ttl=64 time=0.112 ms
+
+--- container3 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 0.100/0.117/0.146 ms
+</code></pre><p>然而在默认的bridge网络中，并不是这样。在默认的bridge网络中，Docker并不支持自动的服务发现：</p>
+<pre><code>/ #  ping -w 4 container1
+ping: bad address &apos;container1&apos;
+</code></pre><p>在默认的bridge网络中，可以使用传统的<code>docker run --link</code>命令来启用通过名称的解析。当然，在没有使用<code>--link</code>时，可以通过彼此的ip地址进行通信。<br>退出container2的终端，使用快捷键CTRL-p然后CTRL-q。<br>在这个示例当中，container2连接到了两个网络上，所以它可以与container1和container3通信。但container1和container3并不在一个网络当中所以它们之间并不能通信。下面连接到container3的控制台然后测试一下（container1的ip为172.17.0.4）：</p>
+<pre><code>[yangdong@centos7 ~]$ docker attach container3
+/ # ping 172.17.0.4
+PING 172.17.0.2 (172.17.0.2): 56 data bytes
+^C
+--- 172.17.0.2 ping statistics ---
+4 packets transmitted, 0 packets received, 100% packet loss
+</code></pre><h4 id="断开容器连接"><a href="#断开容器连接" class="headerlink" title="断开容器连接"></a>断开容器连接</h4><p>用户可以通过<code>docker network disconnect</code>命令断开容器到某个网络的连接，当断开此连接后，容器就不能通过此网络与其它容器通信了：</p>
+<pre><code>[yangdong@centos7 ~]$ docker network disconnect isolated_nw container2
+[yangdong@centos7 ~]$ docker attach container2
+/ # ifconfig 
+eth0      Link encap:Ethernet  HWaddr 02:42:AC:11:00:05  
+        inet addr:172.17.0.5  Bcast:0.0.0.0  Mask:255.255.0.0
+        inet6 addr: fe80::42:acff:fe11:5/64 Scope:Link
+        UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+        RX packets:17 errors:0 dropped:0 overruns:0 frame:0
+        TX packets:16 errors:0 dropped:0 overruns:0 carrier:0
+        collisions:0 txqueuelen:0 
+        RX bytes:1222 (1.1 KiB)  TX bytes:1152 (1.1 KiB)
+
+lo        Link encap:Local Loopback  
+        inet addr:127.0.0.1  Mask:255.0.0.0
+        inet6 addr: ::1/128 Scope:Host
+        UP LOOPBACK RUNNING  MTU:65536  Metric:1
+        RX packets:16 errors:0 dropped:0 overruns:0 frame:0
+        TX packets:16 errors:0 dropped:0 overruns:0 carrier:0
+        collisions:0 txqueuelen:0 
+        RX bytes:922 (922.0 B)  TX bytes:922 (922.0 B)
+/ # ping container3
+ping: bad address &apos;container3&apos;
+</code></pre><h4 id="移除一个网络"><a href="#移除一个网络" class="headerlink" title="移除一个网络"></a>移除一个网络</h4><p>当一个网络中所有的容器都停止或断开连接后，可以移除该网络：</p>
+<pre><code>[yangdong@centos7 ~]$ docker network disconnect isolated_nw container3
+[yangdong@centos7 ~]$ docker network rm isolated_nw
+isolated_nw
+[yangdong@centos7 ~]$ docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+2a820cde1d0c        bridge              bridge              local               
+54be0bc791bf        host                host                local               
+8488a8a4ca59        none                null                local               
+a88875cc258f        simple-network      bridge              local  
+</code></pre><p>更详细信息可以参考<a href="https://docs.docker.com/v1.12/engine/userguide/networking/work-with-networks/#/undefined" target="_blank" rel="external">官方文档</a>。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/Docker/">Docker</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/ServiceDiscovery/">服务发现</a>, <a href="/tags/Docker/">Docker</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/11/23/Docker的单主机容器网络/" data-title="Docker的单主机容器网络" data-url="https://andyyoung01.github.io/2016/11/23/Docker的单主机容器网络/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

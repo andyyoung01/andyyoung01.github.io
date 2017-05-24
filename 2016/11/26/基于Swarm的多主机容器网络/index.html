@@ -1,0 +1,470 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>基于Swarm的多主机容器网络 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="基于Swarm的多主机容器网络"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-11-26T09:10:02.000Z"><a href="/2016/11/26/基于Swarm的多主机容器网络/">2016-11-26</a></time>
+        
+  
+    <h1 class="title">基于Swarm的多主机容器网络</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#在Swarm集群中创建overlay网络"><span class="toc-text">在Swarm集群中创建overlay网络</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#将服务连接到overlay网络"><span class="toc-text">将服务连接到overlay网络</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用swarm模式的服务发现"><span class="toc-text">使用swarm模式的服务发现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为服务使用DNS-round-robin"><span class="toc-text">为服务使用DNS round-robin</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#确认VIP的连通性"><span class="toc-text">确认VIP的连通性</span></a></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>在Docker版本1.12之后，Swarm集成进了Docker引擎，而跨主机的容器网络也有所发展。在Docker较老的版本中，要实现跨主机的容器网络可以使用第三方的基于<a href="http://baike.baidu.com/link?url=RTHKRVoqDMfRb2Ip9bWbJJOhXBZeZ77tn_YqORcrT3Xoyo9NpiATYBYNV_7uD3zhR4cUi4gTnuQzUpqo0ou79_" target="_blank" rel="external">SDN</a>的解决方案，而最新版的Docker引擎在swarm模式下原生支持<a href="https://en.wikipedia.org/wiki/Overlay_network" target="_blank" rel="external">overlay networks</a>，本篇就来实践一下。</p>
+<a id="more"></a>
+<p>在Docker1.12版之后，Docker引擎原生支持跨主机的容器网络，但创建跨主机的容器网络时，需要满足一些前提条件：</p>
+<ul>
+<li>Docker引擎以swarm模式运行<br>或</li>
+<li>在集群中有一个key-value存储系统</li>
+</ul>
+<p>以上两个条件满足任意一个即可以创建跨主机的容器网络。本篇以第一个条件为前提创建跨主机的容器网络。如果想了解基于key-value存储系统的跨主机网络，可以参考文章“<a href="http://tonybai.com/2016/02/15/understanding-docker-multi-host-networking/" target="_blank" rel="external">理解Docker跨多主机容器网络</a>”或<a href="https://docs.docker.com/v1.12/engine/userguide/networking/get-started-overlay/#/overlay-networking-with-an-external-key-value-store" target="_blank" rel="external">官方文档</a>。<br>通过在Swarm模式的Docker引擎创建的跨主机容器网络，并不需要外部的key-value存储系统，这种swarm模式的overlay networks包含以下特性：</p>
+<ul>
+<li>可以将多个服务连接到同一个网络中。</li>
+<li>默认情况下，容器网络的服务发现机制给swarm集群中的每个服务都分配一个虚拟IP地址和一个DNS条目，所以在同一网络中的容器可以通过服务名称访问服务。</li>
+<li>可以将服务配置成使用DNS轮询机制而不是VIP机制来进行负载均衡。</li>
+</ul>
+<h3 id="在Swarm集群中创建overlay网络"><a href="#在Swarm集群中创建overlay网络" class="headerlink" title="在Swarm集群中创建overlay网络"></a>在Swarm集群中创建overlay网络</h3><p>下面就在swarm集群中实际创建一个overlay network。这里使用文章“<a href="/2016/11/24/新版Docker的Swarm模式/" title="新版Docker的Swarm模式">新版Docker的Swarm模式</a>”中创建的Swarm集群。<br>可以通过如下命令在manager节点上创建overlay网络：</p>
+<pre><code>[yangdong@centos7 ~]$ docker network create \
+&gt;   --driver overlay \
+&gt;   --subnet 10.0.9.0/24 \
+&gt;   my-network
+5fke0hya379rbmfhdemevngjx
+</code></pre><p><code>--subnet</code>命令行参数指定overlay网络使用的子网网段。创建完成后使用<code>docker network ls</code>查看创建的网络：</p>
+<pre><code>[yangdong@centos7 ~]$ docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+2a820cde1d0c        bridge              bridge              local               
+...             
+5fke0hya379r        my-network          overlay             swarm               
+</code></pre><p>在将服务连接到这个创建的网络之前，网络覆盖到manager节点。上面输出的SCOPE为<code>swarm</code>表示将服务部署到Swarm时可以使用此网络。在将服务连接到这个网络后，Swarm只将该网络扩展到特定的worker节点，这个worker节点被swarm调度器分配了运行服务的任务。在那些没有运行该服务任务的worker节点上，网络并不扩展到该节点。</p>
+<h3 id="将服务连接到overlay网络"><a href="#将服务连接到overlay网络" class="headerlink" title="将服务连接到overlay网络"></a>将服务连接到overlay网络</h3><p>在创建服务时可以通过<code>--network</code>参数将服务连接到某个网络：</p>
+<pre><code>[yangdong@centos7 ~]$ docker service create \
+&gt;   --replicas 3 \
+&gt;   --name my-web \
+&gt;   --network my-network \
+&gt;   nginx
+51fcns6k7bqknqnmsjbyo0unf
+</code></pre><p>上面名为“my-web”的服务启动了3个task，用于运行每个任务的容器都可以彼此通过overlay网络进行通信。Swarm集群将网络扩展到所有任务处于Running状态的节点上。<br>在manager节点上，通过下面的命令查看哪些节点有处于running状态的任务：    </p>
+<pre><code>[yangdong@centos7 ~]$ docker service ps my-web
+ID                         NAME      IMAGE  NODE       DESIRED STATE  CURRENT STATE               ERROR
+78s6t4si84br75njmc79zux54  my-web.1  nginx  centos7-A  Running        Running about a minute ago        
+99ogxe6mcc3v30e3ugtx53qg7  my-web.2  nginx  centos7-B  Running        Running about a minute ago  
+ag94ocnqubfp4naf6v1utqbog  my-web.3  nginx  centos7    Running        Running about a minute ago  
+</code></pre><p>可见三个节点都有处于running状态的任务，所以my-network网络扩展到三个节点上。<br>可以查询某个节点上关于my-network的详细信息：</p>
+<pre><code>[yangdong@centos7 ~]$ docker network inspect my-network
+[
+    {
+        &quot;Name&quot;: &quot;my-network&quot;,
+        &quot;Id&quot;: &quot;5fke0hya379rbmfhdemevngjx&quot;,
+        &quot;Scope&quot;: &quot;swarm&quot;,
+        &quot;Driver&quot;: &quot;overlay&quot;,
+        &quot;EnableIPv6&quot;: false,
+        &quot;IPAM&quot;: {
+            &quot;Driver&quot;: &quot;default&quot;,
+            &quot;Options&quot;: null,
+            &quot;Config&quot;: [
+                {
+                    &quot;Subnet&quot;: &quot;10.0.9.0/24&quot;,
+                    &quot;Gateway&quot;: &quot;10.0.9.1&quot;
+                }
+            ]
+        },
+        &quot;Internal&quot;: false,
+        &quot;Containers&quot;: {
+            &quot;f6cb2bc95344e74d2790403ae1072c14cd696247ae62482b7cbf198621b39456&quot;: {
+                &quot;Name&quot;: &quot;my-web.3.ag94ocnqubfp4naf6v1utqbog&quot;,
+                &quot;EndpointID&quot;: &quot;020adbf9337f08fdf31b1e6282a7e28599e60f93d582ebe101a17f7c4eace2e2&quot;,
+                &quot;MacAddress&quot;: &quot;02:42:0a:00:09:05&quot;,
+                &quot;IPv4Address&quot;: &quot;10.0.9.5/24&quot;,
+                &quot;IPv6Address&quot;: &quot;&quot;
+            }
+        },
+        &quot;Options&quot;: {
+            &quot;com.docker.network.driver.overlay.vxlanid_list&quot;: &quot;257&quot;
+        },
+        &quot;Labels&quot;: {}
+    }
+]
+</code></pre><p>从上面的信息可以看出在节点centos7上，名为my-web的服务有一个名为my-web.3.ag94ocnqubfp4naf6v1utqbog的task连接到名为my-network的网络上。<br>可以通过查询服务来获得服务的虚拟IP地址，如下：</p>
+<pre><code>[yangdong@centos7 ~]$ docker service inspect \
+&gt;   --format=&apos;{{json .Endpoint.VirtualIPs}}&apos; \
+&gt;   my-web
+[{&quot;NetworkID&quot;:&quot;5fke0hya379rbmfhdemevngjx&quot;,&quot;Addr&quot;:&quot;10.0.9.2/24&quot;}]
+</code></pre><p>整个网络结构如下图所示：<br><img src="/2016/11/26/基于Swarm的多主机容器网络/1.png" alt="“my-network”" title="“my-network”"><br>加入my-network网络的容器彼此之间可以通过IP地址通信，也可以通过名称通信。</p>
+<h3 id="使用swarm模式的服务发现"><a href="#使用swarm模式的服务发现" class="headerlink" title="使用swarm模式的服务发现"></a>使用swarm模式的服务发现</h3><p>默认情况下，当创建了一个服务并连接到某个网络后，swarm会为该服务分配一个VIP。此VIP根据服务名映射到DNS。在网络上的容器共享该服务的DNS映射，所以网络上的任意容器可以通过服务名访问服务。<br>在同一overlay网络中，不用通过端口映射来使某个服务可以被其它服务访问。Swarm内部的负载均衡器自动将请求发送到服务的VIP上，然后分发到所有的active的task上。<br>下面的实例展示了在同一个网络中添加了一个busybox服务，此服务可以通过名称my-web访问前面创建的nginx服务：</p>
+<ol>
+<li><p>在manager节点上，部署一个busybox服务到与my-web服务相同的网络中，也就是my-network中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ docker service create \</div><div class="line">&gt;   --name my-busybox \</div><div class="line">&gt;   --network my-network \</div><div class="line">&gt;   busybox \</div><div class="line">&gt;   sleep 3000</div><div class="line">3rdnz62u2n8d916d5zxbo9lax</div></pre></td></tr></table></figure>
+</li>
+<li><p>查询busybox运行在哪个节点上：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$  docker service ps my-busybox</div><div class="line">ID                         NAME          IMAGE    NODE     DESIRED STATE  CURRENT STATE               ERROR</div><div class="line">1ph2hdtwagafkhd5hkfcx6131  my-busybox.1  busybox  centos7  Running        Running about a minute ago</div></pre></td></tr></table></figure>
+</li>
+<li><p>登录busybox运行的节点，打开busybox的交互shell：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[yangdong@centos7 ~]$ docker exec -it my-busybox.1.1ph2hdtwagafkhd5hkfcx6131 /bin/sh</div><div class="line">/ #</div></pre></td></tr></table></figure>
+</li>
+<li><p>从busybox容器内部，查询DNS来查看my-web的VIP：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">/ # nslookup my-web</div><div class="line">Server:    127.0.0.11</div><div class="line">Address 1: 127.0.0.11</div><div class="line"></div><div class="line">Name:      my-web</div><div class="line">Address 1: 10.0.9.2 10.0.9.2</div></pre></td></tr></table></figure>
+</li>
+<li><p>从busybox容器内部，使用特殊查询<tasks.service-name>查询DNS，来找到my-web服务的所有容器的IP地址：</tasks.service-name></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">/ # nslookup tasks.my-web</div><div class="line">Server:    127.0.0.11</div><div class="line">Address 1: 127.0.0.11</div><div class="line"></div><div class="line">Name:      tasks.my-web</div><div class="line">Address 1: 10.0.9.3 my-web.1.78s6t4si84br75njmc79zux54.my-network</div><div class="line">Address 2: 10.0.9.4 my-web.2.99ogxe6mcc3v30e3ugtx53qg7.my-network</div><div class="line">Address 3: 10.0.9.5 my-web.3.ag94ocnqubfp4naf6v1utqbog.my-network</div></pre></td></tr></table></figure>
+</li>
+<li><p>从busybox容器内部，通过wget来访问my-web服务中运行的nginx网页服务器</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">/ # wget -O- my-web</div><div class="line">Connecting to my-web (10.0.9.2:80)</div><div class="line">&lt;!DOCTYPE html&gt;</div><div class="line">&lt;html&gt;</div><div class="line">&lt;head&gt;</div><div class="line">&lt;title&gt;Welcome to nginx!&lt;/title&gt;</div><div class="line">...</div></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>Swarm的负载均衡器自动将HTTP请求路由到VIP上，然后到一个active的task容器上。它根据round-robin选择算法将后续的请求分发到另一个active的task上。</p>
+<h3 id="为服务使用DNS-round-robin"><a href="#为服务使用DNS-round-robin" class="headerlink" title="为服务使用DNS round-robin"></a>为服务使用DNS round-robin</h3><p>在创建服务时，可以配置服务直接使用DNS round-robin而无需使用VIP。这是通过在创建服务时指定<code>--endpoint-mode dnsrr</code>命令行参数实现的。当你想要使用自己的负载均衡器时可以使用这种方式。<br>下面的例子创建了一个dnsrr终端模式的服务：</p>
+<pre><code>[yangdong@centos7 ~]$ docker service create \
+&gt;   --replicas 3 \
+&gt;   --name my-dnsrr-service \
+&gt;   --network my-network \
+&gt;   --endpoint-mode dnsrr \
+&gt;   nginx
+3uk1nzvd2iwg87evkcu8z1y90
+</code></pre><p>当通过服务名称查询DNS时，DNS服务返回所有任务容器的IP地址：</p>
+<pre><code>/ # nslookup my-dnsrr-service
+Server:    127.0.0.11
+Address 1: 127.0.0.11
+
+Name:      my-dnsrr-service
+Address 1: 10.0.9.10 my-dnsrr-service.3.0sm1n9o8hygzarv5t5eq46okn.my-network
+Address 2: 10.0.9.9 my-dnsrr-service.2.b3o1uoa8m003b2kk0ytl9lawh.my-network
+Address 3: 10.0.9.8 my-dnsrr-service.1.55za4c83jq9846rle6eigiq15.my-network
+</code></pre><h3 id="确认VIP的连通性"><a href="#确认VIP的连通性" class="headerlink" title="确认VIP的连通性"></a>确认VIP的连通性</h3><p>通常Docker官方推荐使用dig，nslookup或其它DNS查询工具来查询通过DNS对服务名的访问。因为VIP是逻辑IP，ping并不是确认VIP连通性的正确的工具。</p>
+<p>本篇文章的大部分内容翻译自<a href="https://docs.docker.com/v1.12/engine/swarm/networking/" target="_blank" rel="external">官方文档</a>，如有不当的地方欢迎批评指正。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/Docker/">Docker</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/ServiceDiscovery/">服务发现</a>, <a href="/tags/Docker/">Docker</a>, <a href="/tags/Docker-Swarm/">Docker Swarm</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/11/26/基于Swarm的多主机容器网络/" data-title="基于Swarm的多主机容器网络" data-url="https://andyyoung01.github.io/2016/11/26/基于Swarm的多主机容器网络/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

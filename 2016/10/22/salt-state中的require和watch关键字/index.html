@@ -1,0 +1,356 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>salt state中的require和watch关键字 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="salt state中的require和watch关键字"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2016-10-22T08:12:52.000Z"><a href="/2016/10/22/salt-state中的require和watch关键字/">2016-10-22</a></time>
+        
+  
+    <h1 class="title">salt state中的require和watch关键字</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>前面的文章中我们了解了salt中的模块和runners，本篇具体应用一下salt中的个别state模块，然后重点看一下state中的require和watch关键字的用法。</p>
+<a id="more"></a>
+<p>本篇文章中，我们使用了salt中的<code>cmd</code> state模块，它用来在minions上执行命令。通过命令的执行，在minions上安装特定版本的ruby语言环境。在安装ruby时，并没有使用操作系统提供的包管理器（如yum或apt-get等），而是通过ruby的RVM程序进行的。在salt的state模块中，也有一个rvm模块，可以使用<code>salt-call sys.state_doc rvm.installed</code>命令来查看其具体用法。下面来看一下实现上述需求的具体过程：<br>在staging环境的基目录下创建名为ruby的文件夹，然后在文件夹中新建文件init.sls和子文件夹files，在files子文件夹中创建文件install_rvm，两个文件的内容如下：<br><figure class="highlight yaml"><figcaption><span>init.sls</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line"><span class="string">/tmp/install_rvm:</span></div><div class="line">  <span class="string">file.managed:</span></div><div class="line"><span class="attr">    - source:</span> <span class="attr">salt://ruby/files/install_rvm</span></div><div class="line"><span class="attr">    - user:</span> <span class="string">root</span></div><div class="line"><span class="attr">    - group:</span> <span class="string">root</span></div><div class="line"><span class="attr">    - mode:</span> <span class="number">744</span></div><div class="line"><span class="attr">install_rvm:</span></div><div class="line">  <span class="string">cmd.run:</span></div><div class="line"><span class="attr">    - name:</span> <span class="string">/tmp/install_rvm</span></div><div class="line"><span class="attr">    - shell:</span> <span class="string">/bin/bash</span></div><div class="line"><span class="attr">    - require:</span></div><div class="line"><span class="attr">      - file:</span> <span class="string">/tmp/install_rvm</span></div><div class="line"><span class="string">ruby-2.3.1:</span></div><div class="line">  <span class="string">rvm.installed:</span></div><div class="line"><span class="attr">    - default:</span> <span class="literal">True</span></div><div class="line"><span class="attr">  require:</span></div><div class="line"><span class="attr">    - cmd:</span> <span class="string">install_rvm</span></div><div class="line"><span class="attr">set_ruby:</span></div><div class="line">  <span class="string">cmd.wait:</span></div><div class="line"><span class="attr">    - name:</span> <span class="string">'source /etc/profile.d/rvm.sh; rvm use 2.3.1 --default'</span></div><div class="line"><span class="attr">    - shell:</span> <span class="string">/bin/bash</span></div><div class="line"><span class="attr">    - stateful:</span> <span class="literal">False</span></div><div class="line"><span class="attr">    - require:</span></div><div class="line"><span class="attr">      - rvm:</span> <span class="string">ruby-2.3.1</span></div><div class="line"><span class="attr">    - watch:</span></div><div class="line"><span class="attr">      - rvm:</span> <span class="string">ruby-2.3.1</span></div></pre></td></tr></table></figure></p>
+<figure class="highlight yaml"><figcaption><span>install_rvm</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/bin/sh</span></div><div class="line"><span class="string">set</span> <span class="bullet">-o</span> <span class="string">errexit</span></div><div class="line"></div><div class="line"><span class="string">gpg</span> <span class="bullet">--keyserver</span> <span class="attr">hkp://keys.gnupg.net</span> <span class="bullet">--recv-keys</span> <span class="number">409</span><span class="string">B6B1796C275462A1703113804BB82D39DC0E3</span></div><div class="line"><span class="string">curl</span> <span class="bullet">-L</span> <span class="attr">https://get.rvm.io</span> <span class="string">| bash -s stable</span></div><div class="line">echo "ruby_url=https://cache.ruby-china.org/pub/ruby" &gt; /usr/local/rvm/user/db</div><div class="line">source /etc/profile.d/rvm.sh</div></pre></td></tr></table></figure>
+<p>首先来分析一下init.sls文件的内容，此state文件使用了<code>file</code>,<code>cmd</code>和<code>rvm</code>模块，具体的模块用法可以通过上篇文章介绍的sys.state_doc命令得到。<br>文件的第一部分/tmp/install_rvm使用了file.managed函数，可以在minion上通过<code>salt-call sys.list_state_functions file.managed</code>查看此函数的帮助文档，文章中对name，source，user，group和mode都有介绍。这里主要说一下name字段，在此部分中并没有出现，于是salt自动将/tmp/install_rvm指定为name，所以此部分的引用名称和name字段都是/tmp/install_rvm。在state文件中，所有的name字段都可以通过这种方式隐含指定。<br>文件的第二部分install_rvm使用了cmd模块的run函数，也可以查看帮助文档得到里面各个字段的解释。这里我们主要注意<code>require</code>关键字。<code>require</code>使此关键字所在部分定义的功能只在它依赖的部分执行成功后才开始执行，这里只有当第一部分/tmp/install_rvm执行完毕，也就是文件从salt的文件服务器上拷贝到minion上并且命名为/tmp/install_rvm后，才开始执行第二部分install_rvm。<br>再来看第三部分ruby-2.3.1。它使用了rvm.installed函数。帮助文档中有更详细的解释。rvm模块默认检查它所在minion上是否安装了rvm环境，如果没有安装它会自动安装rvm。我们在前一部分通过install_rvm的bash脚本已经安装了rvm环境，并且修改了一些配置，使得rvm在下载相关文件时可以使用更快速度的源。<br>最后一部分使用了cmd.wait函数。它的作用是当它依赖的定义文件发生改变后，才执行cmd.wait定义的命令，在这里就是说只有当ruby-2.3.1安装后或者升级后，这里的name部分的命令才会执行。<code>watch</code>关键字在这里也是必要的，此关键字使set_ruby部分一直监视ruby-2.3.1的状态，如果它发生改变便执行此部分定义的命令。<br>install_rvm脚本是用来安装rvm环境的。它首先将用于安装rvm的key导入到本地，然后执行安装脚本，再后面是替换rvm的下载源，最后执行rvm的环境设置脚本。<br>完成所有的配置后，通过如下命令执行state：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div></pre></td><td class="code"><pre><div class="line">[root@centos7-A ruby]# salt &apos;stgdc1web01&apos; state.sls ruby saltenv=staging</div><div class="line">stgdc1web01:</div><div class="line">----------</div><div class="line">          ID: /tmp/install_rvm</div><div class="line">    Function: file.managed</div><div class="line">      Result: True</div><div class="line">     Comment: File /tmp/install_rvm updated</div><div class="line">     Started: 20:36:46.015186</div><div class="line">    Duration: 44.59 ms</div><div class="line">     Changes:   </div><div class="line">              ----------</div><div class="line">              mode:</div><div class="line">                  0744</div><div class="line">----------</div><div class="line">          ID: install_rvm</div><div class="line">    Function: cmd.run</div><div class="line">        Name: /tmp/install_rvm</div><div class="line">      Result: True</div><div class="line">     Comment: Command &quot;/tmp/install_rvm&quot; run</div><div class="line">     Started: 20:36:46.065109</div><div class="line">    Duration: 172070.053 ms</div><div class="line">     Changes:   </div><div class="line">              ----------</div><div class="line">              pid:</div><div class="line">                  18127</div><div class="line">              retcode:</div><div class="line">                  0</div><div class="line">              stderr:</div><div class="line">                  gpg: requesting key D39DC0E3 from hkp server keys.gnupg.net</div><div class="line">                  gpg: key D39DC0E3: &quot;Michal Papis (RVM signing) &lt;mpapis@gmail.com&gt;&quot; not changed</div><div class="line">                  gpg: Total number processed: 1</div><div class="line">                  gpg:              unchanged: 1</div><div class="line">                    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current</div><div class="line">                                                   Dload  Upload   Total   Spent    Left  Speed</div><div class="line">                  </div><div class="line">                    0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0</div><div class="line">                    0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0</div><div class="line">                    0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0</div><div class="line">                    0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0</div><div class="line">                  100   184  100   184    0     0     54      0  0:00:03  0:00:03 --:--:--    54</div><div class="line">                  100   184  100   184    0     0     54      0  0:00:03  0:00:03 --:--:--    54</div><div class="line">                  </div><div class="line">                    0     0    0     0    0     0      0      0 --:--:--  0:00:05 --:--:--     0</div><div class="line">                    0     0    0     0    0     0      0      0 --:--:--  0:00:06 --:--:--     0</div><div class="line">                    0     0    0     0    0     0      0      0 --:--:--  0:00:07 --:--:--     0</div><div class="line">                    0     0    0     0    0     0      0      0 --:--:--  0:00:08 --:--:--     0</div><div class="line">                    0     0    0     0    0     0      0      0 --:--:--  0:00:09 --:--:--     0</div><div class="line">                    0     0    0     0    0     0      0      0 --:--:--  0:00:09 --:--:--     0</div><div class="line">                    0     0    0     0    0     0      0      0 --:--:--  0:00:11 --:--:--     0</div><div class="line">                    0     0    0     0    0     0      0      0 --:--:--  0:00:11 --:--:--     0</div><div class="line">                    8 22865    8  1968    0     0    158      0  0:02:24  0:00:12  0:02:12   483</div><div class="line">                   20 22865   20  4727    0     0    351      0  0:01:05  0:00:13  0:00:52  1147</div><div class="line">                   20 22865   20  4727    0     0    327      0  0:01:09  0:00:14  0:00:55  1011</div><div class="line">                   20 22865   20  4727    0     0    306      0  0:01:14  0:00:15  0:00:59  1125</div><div class="line">                   44 22865   44 10245    0     0    606      0  0:00:37  0:00:16  0:00:21  1922</div><div class="line">                   44 22865   44 10245    0     0    589      0  0:00:38  0:00:17  0:00:21  1658</div><div class="line">                   57 22865   57 13004    0     0    709      0  0:00:32  0:00:18  0:00:14  1687</div><div class="line">                   57 22865   57 13004    0     0    672      0  0:00:34  0:00:19  0:00:15  1687</div><div class="line">                   57 22865   57 13004    0     0    639      0  0:00:35  0:00:20  0:00:15  1687</div><div class="line">                   68 22865   68 15593    0     0    718      0  0:00:31  0:00:21  0:00:10  1113</div><div class="line">                   68 22865   68 15593    0     0    678      0  0:00:33  0:00:22  0:00:11   953</div><div class="line">                   68 22865   68 15593    0     0    652      0  0:00:35  0:00:23  0:00:12   466</div><div class="line">                   68 22865   68 15593    0     0    626      0  0:00:36  0:00:24  0:00:12   466</div><div class="line">                   68 22865   68 15593    0     0    602      0  0:00:37  0:00:25  0:00:12   466</div><div class="line">                   68 22865   68 15593    0     0    583      0  0:00:39  0:00:26  0:00:13     0</div><div class="line">                   80 22865   80 18352    0     0    651      0  0:00:35  0:00:28  0:00:07   529</div><div class="line">                   92 22865   92 21111    0     0    740      0  0:00:30  0:00:28  0:00:02  1198</div><div class="line">                  100 22865  100 22865    0     0    785      0  0:00:29  0:00:29 --:--:--  1728</div><div class="line">                  gpg: Signature made Tue Mar 29 21:49:47 2016 CST using RSA key ID BF04FF17</div><div class="line">                  gpg: Good signature from &quot;Michal Papis (RVM signing) &lt;mpapis@gmail.com&gt;&quot;</div><div class="line">                  gpg: WARNING: This key is not certified with a trusted signature!</div><div class="line">                  gpg:          There is no indication that the signature belongs to the owner.</div><div class="line">                  Primary key fingerprint: 409B 6B17 96C2 7546 2A17  0311 3804 BB82 D39D C0E3</div><div class="line">                       Subkey fingerprint: 62C9 E5F4 DA30 0D94 AC36  166B E206 C29F BF04 FF17</div><div class="line">                  In case of problems: https://rvm.io/help and https://twitter.com/rvm_io</div><div class="line">                    * No new notes to display.</div><div class="line">              stdout:</div><div class="line">                  Downloading https://github.com/rvm/rvm/archive/1.27.0.tar.gz</div><div class="line">                  Downloading https://github.com/rvm/rvm/releases/download/1.27.0/1.27.0.tar.gz.asc</div><div class="line">                  GPG verified &apos;/usr/local/rvm/archives/rvm-1.27.0.tgz&apos;</div><div class="line">                  </div><div class="line">                  Upgrading the RVM installation in /usr/local/rvm/</div><div class="line">                  Upgrade of RVM in /usr/local/rvm/ is complete.</div><div class="line">                  </div><div class="line">                  # Administrator,</div><div class="line">                  #</div><div class="line">                  #   Thank you for using RVM!</div><div class="line">                  #   We sincerely hope that RVM helps to make your life easier and more enjoyable!!!</div><div class="line">                  #</div><div class="line">                  # ~Wayne, Michal &amp; team.</div><div class="line">                  </div><div class="line">                  </div><div class="line">                  Upgrade Notes:</div><div class="line">----------</div><div class="line">          ID: ruby-2.3.1</div><div class="line">    Function: rvm.installed</div><div class="line">      Result: True</div><div class="line">     Comment: Successfully installed ruby.</div><div class="line">     Started: 20:39:38.135938</div><div class="line">    Duration: 1695951.112 ms</div><div class="line">     Changes:   </div><div class="line">              ----------</div><div class="line">              ruby-2.3.1:</div><div class="line">                  Installed</div><div class="line">----------</div><div class="line">          ID: set_ruby</div><div class="line">    Function: cmd.wait</div><div class="line">        Name: source /etc/profile.d/rvm.sh; rvm use 2.3.1 --default</div><div class="line">      Result: True</div><div class="line">     Comment: Command &quot;source /etc/profile.d/rvm.sh; rvm use 2.3.1 --default&quot; run</div><div class="line">     Started: 21:07:54.120649</div><div class="line">    Duration: 7428.983 ms</div><div class="line">     Changes:   </div><div class="line">              ----------</div><div class="line">              pid:</div><div class="line">                  33903</div><div class="line">              retcode:</div><div class="line">                  0</div><div class="line">              stderr:</div><div class="line">              stdout:</div><div class="line">                  Using /usr/local/rvm/gems/ruby-2.3.1</div><div class="line"></div><div class="line">Summary</div><div class="line">------------</div><div class="line">Succeeded: 4 (changed=4)</div><div class="line">Failed:    0</div><div class="line">------------</div><div class="line">Total states run:     4</div></pre></td></tr></table></figure></p>
+<p>经过漫长地等待后，终于通过salt完成了ruby环境的配置。</p>
+<p>本篇综合应用了一下state中的各种模块，学习了require和watch关键字的使用，下篇了解一下salt的orchestrate runner。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/Salt/">Salt</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Salt/">Salt</a>, <a href="/tags/ruby/">ruby</a>, <a href="/tags/rvm/">rvm</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2016/10/22/salt-state中的require和watch关键字/" data-title="salt state中的require和watch关键字" data-url="https://andyyoung01.github.io/2016/10/22/salt-state中的require和watch关键字/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>

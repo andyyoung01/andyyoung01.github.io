@@ -1,0 +1,486 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Cobbler自动化部署Linux系统简介 | Andy&#39;s Techblog</title>
+  <meta name="author" content="Yang Dong">
+  
+  <meta name="description" content="关注Linux及运维技术动态">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Cobbler自动化部署Linux系统简介"/>
+  <meta property="og:site_name" content="Andy&#39;s Techblog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Andy&#39;s Techblog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <!-- 添加百度统计服务 -->
+  
+	<script>
+	var _hmt = _hmt || [];
+	(function() {
+	var hm = document.createElement("script");
+	hm.src = "//hm.baidu.com/hm.js?4c3e3c23ac83ea363b46bcbef5a99cf0";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+
+
+
+  <!-- 添加百度链接自动推送工具 -->
+  <script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+  <!-- 添加google分析服务 -->
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-82257154-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  
+  <!-- 添加百度站长服务 -->
+  <meta name="baidu-site-verification" content="jc0OYAlJM2" />
+  <!-- 添加bing站长服务 -->
+  <meta name="msvalidate.01" content="47EEA8F7B9483B0353BF077649B81358" />
+</head>
+
+<body>
+  <header id="header"><div class= "header-content inner">
+	<div class = "alignleft col-one">
+		
+		<div class="header-div">
+		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
+		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		</div>
+	</div>
+	<div class = "alignright col-two">
+		
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div class= "header-nav">
+	<div class='header-nav-content inner'>
+		<div id="main-nav" class="alignleft">
+			<ul>
+		    		
+		    		  <li><a href="/">首页</a></li>
+		    		
+		    		  <li><a href="/archives">归档</a></li>
+		    		
+		    	</ul>
+		</div>
+		<div id="sub-nav" class="alignright">
+     	 <ul>
+		    
+		      <li><a href="/atom.xml">订阅</a></li>
+		    
+     	 </ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</div>
+</header>
+  
+    <div id="content" class="inner">
+      <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+        <div class="icon"></div>
+        
+        <time datetime="2017-03-18T09:07:03.000Z"><a href="/2017/03/18/Cobbler自动化部署Linux系统简介/">2017-03-18</a></time>
+        
+  
+    <h1 class="title">Cobbler自动化部署Linux系统简介</h1>
+  
+
+    </header>
+
+    <div class="entry">
+      
+        <div id="toc" class="toc-article">
+	<div class="toc-title">目录</div>
+	<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Cobbler的安装"><span class="toc-text">1. Cobbler的安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Cobbler的配置"><span class="toc-text">2. Cobbler的配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-修改-etc-cobbler-settings文件"><span class="toc-text">2.1 修改/etc/cobbler/settings文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-修改-etc-cobbler-dhcp-template文件"><span class="toc-text">2.2 修改/etc/cobbler/dhcp.template文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-修改-etc-xinetd-d-tftp文件"><span class="toc-text">2.3 修改/etc/xinetd.d/tftp文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-启动相关服务"><span class="toc-text">2.4 启动相关服务</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Cobbler的文件目录"><span class="toc-text">3. Cobbler的文件目录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-检查错误与同步文件"><span class="toc-text">4. 检查错误与同步文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-导入系统镜像文件"><span class="toc-text">5. 导入系统镜像文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-创建System"><span class="toc-text">6. 创建System</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-启动被安装主机"><span class="toc-text">7. 启动被安装主机</span></a></li></ol>
+</div>
+      
+        <p>作者：杨冬 欢迎转载，也请保留这段声明。谢谢！<br>出处：<a href="https://andyyoung01.github.io/">https://andyyoung01.github.io/</a> 或 <a href="http://andyyoung01.16mb.com/" target="_blank" rel="external">http://andyyoung01.16mb.com/</a></p>
+<p>Cobbler是一个Linux安装服务器，它可以快速安装配置一个网络安装环境。Cobbler通过将设置和管理一个安装服务器所涉及的各种任务集中在一起，简化了整个安装服务器的系统配置。</p>
+<a id="more"></a>
+<p>在之前的文章，介绍过<a href="/2016/10/25/通过salt-cloud在云端批量部署计算节点/" title="通过salt cloud在云端批量部署计算节点">通过salt cloud在云端批量部署计算节点</a>。但是如果我们需要的是快速批量部署物理服务器的话，salt-cloud并不能实现，这样就需要通过其它工具的辅助。<br>对于Linux系统自动化部署可以采用pxe+dhcp+tftp配合kickstart实现，但是面对多版本、多部署需求的情况下，这种普通的部署方式可能达不到我们的要求；这时候就需要借助cobbler开源自动化部署工具来实现。Cobbler是一款快速的网络系统部署工具，其最大的特点是集合了所有系统部署所需服务，如DHCP、DNS、TFTP，这样你在部署一台操作系统的时候不需要在各个服务之间协调切换。<br>下面就来看一下Cobbler的简单使用：</p>
+<h3 id="1-Cobbler的安装"><a href="#1-Cobbler的安装" class="headerlink" title="1. Cobbler的安装"></a>1. Cobbler的安装</h3><p>本文的实验环境为CentOS7（网段为192.168.71.0/24）：</p>
+<p>1）首先安装epel的源：<code>yum -y install epel-release</code><br>2）安装cobbler相关服务：<code>yum -y install cobbler cobbler-web dhcp pykickstart xinetd</code><br>3）关闭SELinux：<code>setenforce 0</code><br>4）关闭防火墙：<code>systemctl stop firewalld</code></p>
+<h3 id="2-Cobbler的配置"><a href="#2-Cobbler的配置" class="headerlink" title="2. Cobbler的配置"></a>2. Cobbler的配置</h3><p>Cobbler配置非常灵活，可以实现的功能也很多。下面配置一个可以通过网络安装CentOS7系统的Cobbler安装服务器。为了简单起见，我们配置一个可以使该服务器运行的最小配置：</p>
+<h4 id="2-1-修改-etc-cobbler-settings文件"><a href="#2-1-修改-etc-cobbler-settings文件" class="headerlink" title="2.1 修改/etc/cobbler/settings文件"></a>2.1 修改<code>/etc/cobbler/settings</code>文件</h4><p>这里只列出修改了默认值的项：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">manage_dhcp: 1</div><div class="line">server: 192.168.71.10</div><div class="line">next_server: 192.168.71.10</div></pre></td></tr></table></figure></p>
+<p>将manage_dhcp设置为1的意思是让Cobbler管理dhcp服务；选项next_server用在DHCP配置文件中，向机器告知提供引导文件的服务器地址；选项server在机器安装期间用于提供Cobbler 服务器地址。</p>
+<h4 id="2-2-修改-etc-cobbler-dhcp-template文件"><a href="#2-2-修改-etc-cobbler-dhcp-template文件" class="headerlink" title="2.2 修改/etc/cobbler/dhcp.template文件"></a>2.2 修改<code>/etc/cobbler/dhcp.template</code>文件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">subnet 192.168.71.0 netmask 255.255.255.0 &#123;</div><div class="line">     option routers             192.168.71.2;</div><div class="line">     option domain-name-servers 192.168.71.2;</div><div class="line">     option subnet-mask         255.255.255.0;</div><div class="line">     range dynamic-bootp        192.168.71.20 192.168.71.30;</div><div class="line">	 ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>该文件主要配置DHCP服务可以分配IP地址的网段、默认网关地址、DNS服务器地址、子网掩码及可以分配的IP地址池。</p>
+<h4 id="2-3-修改-etc-xinetd-d-tftp文件"><a href="#2-3-修改-etc-xinetd-d-tftp文件" class="headerlink" title="2.3 修改/etc/xinetd.d/tftp文件"></a>2.3 修改<code>/etc/xinetd.d/tftp</code>文件</h4><p>将该文件中<code>disable = yes</code>改为<code>disable = no</code></p>
+<h4 id="2-4-启动相关服务"><a href="#2-4-启动相关服务" class="headerlink" title="2.4 启动相关服务"></a>2.4 启动相关服务</h4><p>通过命令<code>systemctl start httpd rsyncd xinetd cobblerd</code>启动相关服务。<br>可以通过<code>systemctl status httpd rsyncd xinetd cobblerd</code>查看相关服务的信息。</p>
+<h3 id="3-Cobbler的文件目录"><a href="#3-Cobbler的文件目录" class="headerlink" title="3. Cobbler的文件目录"></a>3. Cobbler的文件目录</h3><p>下面看看cobbler的一些重要文件目录：</p>
+<pre><code>/etc/cobbler             # 配置文件目录
+/etc/cobbler/settings       # cobbler主配置文件
+/etc/cobbler/dhcp.template    # DHCP服务的配置模板
+/etc/cobbler/tftpd.template  # tftp服务的配置模板
+/etc/cobbler/rsync.template # rsync服务的配置模板
+/etc/cobbler/iso           # iso模板配置文件目录
+/etc/cobbler/pxe           # pxe模板文件目录
+/etc/cobbler/power          # 电源的配置文件目录
+/etc/cobbler/users.conf       # Web服务授权配置文件
+/etc/cobbler/users.digest     # web访问的用户名密码配置文件
+/etc/cobbler/dnsmasq.template # DNS服务的配置模板
+/etc/cobbler/modules.conf     # Cobbler模块配置文件
+/var/lib/cobbler           # Cobbler数据目录
+/var/lib/cobbler/config      # 配置文件
+/var/lib/cobbler/kickstarts  # 默认存放kickstart文件
+/var/lib/cobbler/loaders    # 存放的各种引导程序
+/var/www/cobbler          # 系统安装镜像目录
+/var/www/cobbler/ks_mirror    # 导入的系统镜像列表
+/var/www/cobbler/images      # 导入的系统镜像启动文件
+/var/www/cobbler/repo_mirror  # yum源存储目录
+/var/log/cobbler          # 日志目录
+/var/log/cobbler/install.log  # 客户端系统安装日志
+/var/log/cobbler/cobbler.log  # cobbler日志
+</code></pre><h3 id="4-检查错误与同步文件"><a href="#4-检查错误与同步文件" class="headerlink" title="4. 检查错误与同步文件"></a>4. 检查错误与同步文件</h3><p>通过命令<code>cobbler check</code>来检查前面的配置是否正确。这里的输出只是给出建议的配置，有这些错误并不代表着Cobbler安装服务器不能正常运行。下面给出了本机运行上述命令的输出：</p>
+<pre><code>The following are potential configuration items that you may want to fix:
+
+1 : some network boot-loaders are missing from /var/lib/cobbler/loaders, you may run &apos;cobbler get-loaders&apos; to download them, or, if you only want to handle x86/x86_64 netbooting, you may ensure that you have installed a *recent* version of the syslinux package installed and can ignore this message entirely.  Files in this directory, should you want to support all architectures, should include pxelinux.0, menu.c32, elilo.efi, and yaboot. The &apos;cobbler get-loaders&apos; command is the easiest way to resolve these requirements.
+2 : enable and start rsyncd.service with systemctl
+3 : debmirror package is not installed, it will be required to manage debian deployments and repositories
+4 : The default password used by the sample templates for newly installed machines (default_password_crypted in /etc/cobbler/settings) is still set to &apos;cobbler&apos; and should be changed, try: &quot;openssl passwd -1 -salt &apos;random-phrase-here&apos; &apos;your-password-here&apos;&quot; to generate new one
+5 : fencing tools were not found, and are required to use the (optional) power management features. install cman or fence-agents to use them
+
+Restart cobblerd and then run &apos;cobbler sync&apos; to apply changes.
+</code></pre><p>修复第1项配置的方式为运行命令<code>cobbler get-loaders</code>；<br>修复第2项配置的方式为启动rsyncd服务并且使其开机自动运行：<code>systemctl enable rsyncd</code>，由于我们之前已经启动该服务，这里只是使其开机自动运行;<br>由于我们要安装RHEL系列的Linux发行版，所以忽略第3项配置；<br>第4项配置提醒我们新安装的Linux默认的root密码仍然为cobbler，这里我们保留默认密码，不做修改；<br>第5项配置是与电源相关的模块，我们暂时不需要，暂且忽略。</p>
+<p>最后，通过命令<code>cobbler sync</code>来应用前面的配置，如果最后输出“*** TASK COMPLETE ***”表示命令成功完成。</p>
+<h3 id="5-导入系统镜像文件"><a href="#5-导入系统镜像文件" class="headerlink" title="5. 导入系统镜像文件"></a>5. 导入系统镜像文件</h3><p>下面需要在cobbler中加入一个完成的系统安装镜像，首先将光盘ISO镜像挂载到某处：</p>
+<pre><code># mount -t iso9660 -o loop,ro /path/to/isos/CentOS-7.0-1406-x86_64-DVD.iso /mnt
+</code></pre><p>将光盘镜像挂载后，便可以运行导入命令了：</p>
+<pre><code># cobbler import --name=CentOS7 --arch=x86_64 --path=/mnt
+</code></pre><p>由于CentOS7光盘镜像较大，上述命令可能需要一段时间才能完成。如果上述命令成功完成，便可以使用<code>cobbler distro list</code>和<code>cobbler profile list</code>命令来列出系统导入的镜像：</p>
+<pre><code># cobbler distro list
+  CentOS7-x86_64
+# cobbler profile list
+  CentOS7-x86_64
+</code></pre><p>使用<code>cobbler distro report --name=CentOS7-x86_64</code>和<code>cobbler profile report --name=CentOS7-x86_64</code>命令来列出更详细的信息。</p>
+<h3 id="6-创建System"><a href="#6-创建System" class="headerlink" title="6. 创建System"></a>6. 创建System</h3><p>在有了distro和profile之后，就可以创建一个system了。创建一个system对象的最主要的原因是每台机器不同的网络配置。<br>如果不创建system对象，使用profiles也可以完成系统的安装，只是被安装的系统只能使用DHCP的网络配置，但使用system对象就可以指定更详细的网络配置选项。提供给system对象的信息越详细，cobbler就会更多得自动配置被安装的系统。<br>下面配置一个system对象：</p>
+<pre><code># cobbler system add --name=test --profile=CentOS7-x86_64
+</code></pre><p>system对象可以根据被安装机器的MAC地址（这里假设为00:0C:29:A5:33:A0）来识别出不同的主机，从而给该主机的某个网络接口指定的特定的ip地址，子网掩码等信息：</p>
+<pre><code># cobbler system edit --name=test --interface=eth0 --mac=00:50:56:38:B2:53 --ip-address=192.168.71.20 --netmask=255.255.255.0 --static=1 --dns-name=test.mydomain.com
+</code></pre><p>被安装系统的默认网关以及机器名并不是按照每个网络接口指定的，所以这里单独添加：</p>
+<pre><code># cobbler system edit --name=test --gateway=192.168.71.2 --hostname=test.mydomain.com
+</code></pre><p>上述命令便完成了一个system对象的创建及编辑。可以使用<code>cobbler system report --name=test</code>命令查看详细信息：</p>
+<pre><code># cobbler system report --name=test
+Name                           : test
+TFTP Boot Files                : {}
+Comment                        : 
+Enable gPXE?                   : &lt;&lt;inherit&gt;&gt;
+Fetchable Files                : {}
+Gateway                        : 192.168.71.2
+Hostname                       : test.mydomain.com
+Image                          : 
+IPv6 Autoconfiguration         : False
+IPv6 Default Device            : 
+Kernel Options                 : {}
+Kernel Options (Post Install)  : {}
+Kickstart                      : &lt;&lt;inherit&gt;&gt;
+Kickstart Metadata             : {}
+LDAP Enabled                   : False
+LDAP Management Type           : authconfig
+Management Classes             : &lt;&lt;inherit&gt;&gt;
+Management Parameters          : &lt;&lt;inherit&gt;&gt;
+Monit Enabled                  : False
+Name Servers                   : []
+Name Servers Search Path       : []
+Netboot Enabled                : True
+Owners                         : &lt;&lt;inherit&gt;&gt;
+Power Management Address       : 
+Power Management ID            : 
+Power Management Password      : 
+Power Management Type          : ipmitool
+Power Management Username      : 
+Profile                        : CentOS7-x86_64
+Internal proxy                 : &lt;&lt;inherit&gt;&gt;
+Red Hat Management Key         : &lt;&lt;inherit&gt;&gt;
+Red Hat Management Server      : &lt;&lt;inherit&gt;&gt;
+Repos Enabled                  : False
+Server Override                : &lt;&lt;inherit&gt;&gt;
+Status                         : production
+Template Files                 : {}
+Virt Auto Boot                 : &lt;&lt;inherit&gt;&gt;
+Virt CPUs                      : &lt;&lt;inherit&gt;&gt;
+Virt Disk Driver Type          : &lt;&lt;inherit&gt;&gt;
+Virt File Size(GB)             : &lt;&lt;inherit&gt;&gt;
+Virt Path                      : &lt;&lt;inherit&gt;&gt;
+Virt PXE Boot                  : 0
+Virt RAM (MB)                  : &lt;&lt;inherit&gt;&gt;
+Virt Type                      : &lt;&lt;inherit&gt;&gt;
+Interface =====                : eth0
+Bonding Opts                   : 
+Bridge Opts                    : 
+CNAMES                         : []
+InfiniBand Connected Mode      : False
+DHCP Tag                       : 
+DNS Name                       : test.mydomain.com
+Per-Interface Gateway          : 
+Master Interface               : 
+Interface Type                 : 
+IP Address                     : 192.168.71.20
+IPv6 Address                   : 
+IPv6 Default Gateway           : 
+IPv6 MTU                       : 
+IPv6 Prefix                    : 
+IPv6 Secondaries               : []
+IPv6 Static Routes             : []
+MAC Address                    : 00:50:56:38:B2:53
+Management Interface           : False
+MTU                            : 
+Subnet Mask                    : 255.255.255.0
+Static                         : True
+Static Routes                  : []
+Virt Bridge                    : 
+</code></pre><p>虽然在每次编辑了system对象后，cobbler都会进行一次“lite sync”，但通过命令<code>cobbler sync</code>进行一次完整的sync也是不错的，这可以使cobbler自动重新生成dhcpd.conf文件及重启DHCP服务。</p>
+<h3 id="7-启动被安装主机"><a href="#7-启动被安装主机" class="headerlink" title="7. 启动被安装主机"></a>7. 启动被安装主机</h3><p>上述配置全部完成后，就可以启动被安装系统了。如果是使用虚拟机进行安装，确保分配给它的内存不少于2GB，如果分配的内存过小的话，安装过程会报错。启动主机后，由于没有系统，主机会查找可以启动的设备，最后找到网卡，便通过PXE进行网络安装，如下图：<br><img src="/2017/03/18/Cobbler自动化部署Linux系统简介/1.png" alt="“通过PXE启动系统”" title="“通过PXE启动系统”"><br>整个安装过程全部都是自动化进行，不需要人为干预。安装结束后，可以通过用户root密码cobbler登录系统。系统的ip地址，主机名等配置已经在安装过程中自动完成。</p>
+<p>本文对Cobbler进行了一个简单的探索，配置了一个最简单的Cobbler安装服务器。Cobbler的功能还有很多，可以满足许多部署需求，更详细的信息可以参考其<a href="http://cobbler.github.io/manuals/2.8.0/#" target="_blank" rel="external">官方文档</a>。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/Linux/">Linux</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Cobbler/">Cobbler</a>
+  </div>
+
+<!--         <div class = "counter">
+  <span id="busuanzi_container_page_pv" style="display:none">
+      总访问&nbsp<span id="busuanzi_value_page_pv"></span>&nbsp次
+  </span>
+</div>  -->
+        
+  <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a title="分享到QQ空间" href="#" class="bds_qzone" data-cmd="qzone"></a><a title="分享到新浪微博" href="#" class="bds_tsina" data-cmd="tsina"></a><a title="分享到腾讯微博" href="#" class="bds_tqq" data-cmd="tqq"></a><a title="分享到人人网" href="#" class="bds_renren" data-cmd="renren"></a><a title="分享到微信" href="#" class="bds_weixin" data-cmd="weixin"></a></div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{},"image":{"viewList":["qzone","tsina","tqq","renren","weixin"],"viewText":"分享到：","viewSize":"16"},"selectShare":{"bdContainerClass":null,"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin"]}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+  <section id = "relate">
+	
+	  
+  <div id="hm_t_88638"></div>
+
+
+		
+</section>
+
+
+  
+<section id="comment">
+<!--   <h1 class="title">留言</h1> -->
+
+
+    <!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="2017/03/18/Cobbler自动化部署Linux系统简介/" data-title="Cobbler自动化部署Linux系统简介" data-url="https://andyyoung01.github.io/2017/03/18/Cobbler自动化部署Linux系统简介/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"andyyoung01"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+  
+</section>
+
+
+
+
+</div></div>
+      <aside id="sidebar" class="alignright">
+   <div class="search">
+  <form action="//bing.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:andyyoung01.github.io">
+  </form>
+</div> 
+
+  
+<div class="widget tag">
+  <h3 class="title" id="categories">分类</h3>
+<!--   
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><small>13</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Linux/Bash/">Bash</a><small>3</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/Consul/">Consul</a><small>2</small></li>
+     
+  
+	
+		<li><a href="/categories/Docker/">Docker</a><small>27</small></li>
+	
+  
+	
+		<li><a href="/categories/Linux/">Linux</a><small>7</small></li>
+	
+  
+	
+		<li><a href="/categories/Python/">Python</a><small>15</small></li>
+	
+  
+	
+		<li><a href="/categories/Salt/">Salt</a><small>13</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><small>1</small></li>
+     
+  
+	
+		<li><a href="/categories/Others/">其它</a><small>2</small></li>
+	
+  
+	
+		<li><a href="/categories/DistributedSystems/">分布式系统</a><small>17</small></li>
+	
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/CICD/">持续集成与交付</a><small>6</small></li>
+     
+  
+	
+		<li><a class = "list-2"href="/categories/Docker/ImagesBuilding/">镜像构建</a><small>6</small></li>
+     
+   -->
+<!-- <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> -->
+	 <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a><span class="category-list-count">27</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/CICD/">持续集成与交付</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/ImagesBuilding/">镜像构建</a><span class="category-list-count">6</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/">Linux</a><span class="category-list-count">7</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/Linux/Bash/">Bash</a><span class="category-list-count">3</span></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Python/">Python</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Salt/">Salt</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Others/">其它</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/">分布式系统</a><span class="category-list-count">17</span><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Apache-mesos/">Apache mesos</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/Consul/">Consul</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/DistributedSystems/ZooKeeper/">ZooKeeper</a><span class="category-list-count">1</span></li></ul></li></ul> 
+</div>
+ 
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/AWS/" style="font-size: 10px;">AWS</a> <a href="/tags/Apache-mesos/" style="font-size: 17.27px;">Apache mesos</a> <a href="/tags/Aurora/" style="font-size: 10.91px;">Aurora</a> <a href="/tags/Bash/" style="font-size: 11.82px;">Bash</a> <a href="/tags/CI/" style="font-size: 12.73px;">CI</a> <a href="/tags/Chronos/" style="font-size: 10.91px;">Chronos</a> <a href="/tags/Cobbler/" style="font-size: 10px;">Cobbler</a> <a href="/tags/Consul/" style="font-size: 11.82px;">Consul</a> <a href="/tags/Cygwin/" style="font-size: 10px;">Cygwin</a> <a href="/tags/Docker/" style="font-size: 20px;">Docker</a> <a href="/tags/Docker-Swarm/" style="font-size: 12.73px;">Docker Swarm</a> <a href="/tags/Docker-Terminal/" style="font-size: 10px;">Docker-Terminal</a> <a href="/tags/Docker-machine/" style="font-size: 10.91px;">Docker-machine</a> <a href="/tags/DockerUI/" style="font-size: 10px;">DockerUI</a> <a href="/tags/Dockerfile/" style="font-size: 13.64px;">Dockerfile</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Jenkins/" style="font-size: 11.82px;">Jenkins</a> <a href="/tags/Jenkins-Swarm-Plugin/" style="font-size: 10px;">Jenkins Swarm Plugin</a> <a href="/tags/LFS/" style="font-size: 10px;">LFS</a> <a href="/tags/Linux/" style="font-size: 11.82px;">Linux</a> <a href="/tags/Marathon/" style="font-size: 11.82px;">Marathon</a> <a href="/tags/Python/" style="font-size: 19.09px;">Python</a> <a href="/tags/Raft/" style="font-size: 10px;">Raft</a> <a href="/tags/Registrator/" style="font-size: 10px;">Registrator</a> <a href="/tags/Salt/" style="font-size: 16.36px;">Salt</a> <a href="/tags/Salt-Formulas/" style="font-size: 10px;">Salt Formulas</a> <a href="/tags/Salt-cloud/" style="font-size: 10px;">Salt cloud</a> <a href="/tags/Selenium/" style="font-size: 10px;">Selenium</a> <a href="/tags/Source-to-image/" style="font-size: 10px;">Source-to-image</a> <a href="/tags/Weave/" style="font-size: 10px;">Weave</a> <a href="/tags/ZooKeeper/" style="font-size: 10px;">ZooKeeper</a> <a href="/tags/argparse/" style="font-size: 10px;">argparse</a> <a href="/tags/confd/" style="font-size: 10px;">confd</a> <a href="/tags/etcd/" style="font-size: 10.91px;">etcd</a> <a href="/tags/git-flow/" style="font-size: 10px;">git-flow</a> <a href="/tags/pyenv/" style="font-size: 10px;">pyenv</a> <a href="/tags/resolvable/" style="font-size: 10px;">resolvable</a> <a href="/tags/ruby/" style="font-size: 10px;">ruby</a> <a href="/tags/rvm/" style="font-size: 10px;">rvm</a> <a href="/tags/socat/" style="font-size: 10px;">socat</a> <a href="/tags/unittest/" style="font-size: 10px;">unittest</a> <a href="/tags/vagrant/" style="font-size: 10px;">vagrant</a> <a href="/tags/xvfb/" style="font-size: 10px;">xvfb</a> <a href="/tags/zabbix/" style="font-size: 10px;">zabbix</a> <a href="/tags/DistributedSystems/" style="font-size: 18.18px;">分布式系统</a> <a href="/tags/ServiceDiscovery/" style="font-size: 15.45px;">服务发现</a> <a href="/tags/ImagesBuilding/" style="font-size: 14.55px;">镜像构建</a> <a href="/tags/阿里云/" style="font-size: 10px;">阿里云</a>
+  </div>
+</div>
+
+
+  
+  <div class="widget tag">
+    <h3 class="title">归档</h3>
+	<ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">2017年05月</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">2017年04月</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">2017年03月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">2017年02月</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">2017年01月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">2016年12月</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">2016年11月</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">2016年10月</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">2016年09月</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">2016年08月</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">2016年07月</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="widget">
+  <h3 class="title">最新评论</h3>
+  	<!-- 多说最新评论 start -->
+	<div class="ds-recent-comments ds-recent-user" data-num-items="3" data-show-avatars="1" data-show-time="1" data-show-title="1" data-show-admin="1" data-excerpt-length="70"></div>
+	<!-- 多说最新评论 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"andyyoung01"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+</aside>
+      <div class="clearfix"></div>
+    </div>
+  
+  <footer id="footer"><div class="footer-content inner">
+  <div class="alignleft">
+  
+    &copy; 2017 Yang Dong
+    
+  </div>
+  <div class="alignright">
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>, Theme
+    <a href="https://github.com/pengloo53/Hexo-theme-light_cn" target="_blank">light_cn</a>
+  </div>
+<!--   
+  <div class="visit">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+  </div>
+ -->  
+  <div class="clearfix"></div>
+</div></footer>
+  <script src="http://libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+<!-- add calendar widget -->
+
+
+<!-- 添加『不蒜子』计数服务 -->
+<script async src="http://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<div id="toTop">
+	<a href="#">▲</a>
+	<a href="#footer">▼</a>
+</div>
+
+
+</body>
+</html>
