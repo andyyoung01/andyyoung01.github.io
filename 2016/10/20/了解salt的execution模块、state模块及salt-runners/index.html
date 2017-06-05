@@ -24,7 +24,7 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <meta name="wumiiVerification" content="65fd3279-3467-41b0-a800-00d46202dcf6" />
   <!-- 添加百度统计服务 -->
   
 	<script>
@@ -75,14 +75,22 @@
 <body>
   <header id="header"><div class= "header-content inner">
 	<div class = "alignleft col-one">
-		
+		<% if (theme.avatar) { %>
+			<div class='avatar'>
+				<img src = "<%= theme.avatar %>">
+              </div>
+		<% } %>
 		<div class="header-div">
-		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
-		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		    <h1><a href="<%- config.root %>"><%= config.title %></a></h1>
+		    <h2><a href="<%- config.root %>"><% if (config.subtitle){ %><%= config.subtitle %><% } %></a></h2>
 		</div>
 	</div>
 	<div class = "alignright col-two">
-		
+		<% if (theme.ad){ %>
+            <div class="ad">
+			<img src = "<%= theme.ad %>">
+            </div>
+		<% } %>
 	</div>
 	<div class="clearfix"></div>
 </div>
@@ -91,18 +99,17 @@
 	<div class='header-nav-content inner'>
 		<div id="main-nav" class="alignleft">
 			<ul>
-		    		
-		    		  <li><a href="/">首页</a></li>
-		    		
-		    		  <li><a href="/archives">归档</a></li>
-		    		
-		    	</ul>
+			<% for (var i in theme.menu){ %>
+				<li><a class="<%= is_current(theme.menu[i]) ? 'active' : '' %>"
+						href="<%- url_for(theme.menu[i]) %>"><%= i %></a></li>
+				<% } %>
+		    </ul>
 		</div>
 		<div id="sub-nav" class="alignright">
      	 <ul>
-		    
-		      <li><a href="/atom.xml">订阅</a></li>
-		    
+		    <% for (var i in theme.submenu){ %>
+		      <li><a href="<%- theme.submenu[i] %>"><%= i %></a></li>
+		    <% } %>
      	 </ul>
 		</div>
 	</div>
@@ -241,24 +248,13 @@ stgdc1app01:
 <!--   <h1 class="title">留言</h1> -->
 
 
-    <!-- 多说评论框 start -->
-<div class="ds-thread" data-thread-key="2016/10/20/了解salt的execution模块、state模块及salt-runners/" data-title="了解salt的execution模块、state模块及salt runners" data-url="https://andyyoung01.github.io/2016/10/20/了解salt的execution模块、state模块及salt-runners/"></div>
-<!-- 多说评论框 end -->
-<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
-<script type="text/javascript">
-var duoshuoQuery = {short_name:"andyyoung01"};
-  (function() {
-    var ds = document.createElement('script');
-    ds.type = 'text/javascript';ds.async = true;
-    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-    ds.charset = 'UTF-8';
-    (document.getElementsByTagName('head')[0] 
-     || document.getElementsByTagName('body')[0]).appendChild(ds);
-  })();
-  </script>
-<!-- 多说公共JS代码 end -->
-
-
+    <script type="text/javascript" id="wumiiComments">
+    var wumiiPermaLink = "https://andyyoung01.github.io/2016/10/20/了解salt的execution模块、state模块及salt-runners/"; //请用代码生成文章永久的链接
+    var wumiiTitle = "了解salt的execution模块、state模块及salt runners"; //请用代码生成文章标题
+    var wumiiSitePrefix = "https://andyyoung01.github.io"; //安装无觅评论插件的网站的域名，如果是放在子域名上，请提供子域名，如"http://blog.wumii.com"。如果这里填写的域名不对，请自行改正。
+    var wumiiCommentParams = "&pf=JAVASCRIPT";
+</script>
+<script type="text/javascript" src="http://widget.wumii.cn/ext/cw/widget"></script>
   
 </section>
 

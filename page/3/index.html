@@ -24,7 +24,7 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   <meta name="wumiiVerification" content="fb50a101-84fe-4ca2-91a7-ae8cf792978b" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <meta name="wumiiVerification" content="d73b5866-c390-4156-a4dd-51b526b5335e" />
+  <meta name="wumiiVerification" content="65fd3279-3467-41b0-a800-00d46202dcf6" />
   <!-- 添加百度统计服务 -->
   
 	<script>
@@ -75,14 +75,22 @@
 <body>
   <header id="header"><div class= "header-content inner">
 	<div class = "alignleft col-one">
-		
+		<% if (theme.avatar) { %>
+			<div class='avatar'>
+				<img src = "<%= theme.avatar %>">
+              </div>
+		<% } %>
 		<div class="header-div">
-		    <h1><a href="/">Andy&#39;s Techblog</a></h1>
-		    <h2><a href="/">淡泊明志，宁静致远</a></h2>
+		    <h1><a href="<%- config.root %>"><%= config.title %></a></h1>
+		    <h2><a href="<%- config.root %>"><% if (config.subtitle){ %><%= config.subtitle %><% } %></a></h2>
 		</div>
 	</div>
 	<div class = "alignright col-two">
-		
+		<% if (theme.ad){ %>
+            <div class="ad">
+			<img src = "<%= theme.ad %>">
+            </div>
+		<% } %>
 	</div>
 	<div class="clearfix"></div>
 </div>
@@ -91,18 +99,17 @@
 	<div class='header-nav-content inner'>
 		<div id="main-nav" class="alignleft">
 			<ul>
-		    		
-		    		  <li><a href="/">首页</a></li>
-		    		
-		    		  <li><a href="/archives">归档</a></li>
-		    		
-		    	</ul>
+			<% for (var i in theme.menu){ %>
+				<li><a class="<%= is_current(theme.menu[i]) ? 'active' : '' %>"
+						href="<%- url_for(theme.menu[i]) %>"><%= i %></a></li>
+				<% } %>
+		    </ul>
 		</div>
 		<div id="sub-nav" class="alignright">
      	 <ul>
-		    
-		      <li><a href="/atom.xml">订阅</a></li>
-		    
+		    <% for (var i in theme.submenu){ %>
+		      <li><a href="<%- theme.submenu[i] %>"><%= i %></a></li>
+		    <% } %>
      	 </ul>
 		</div>
 	</div>

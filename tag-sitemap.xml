@@ -296,13 +296,6 @@
     </url>
 
     <url>
-        <loc>https://andyyoung01.github.io/tags/Docker/</loc>
-        <lastmod>2017-05-12T12:50:01.000Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://andyyoung01.github.io/tags/Docker-Swarm/</loc>
         <lastmod>2017-05-12T12:50:01.000Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -333,6 +326,13 @@
     <url>
         <loc>https://andyyoung01.github.io/tags/Bash/</loc>
         <lastmod>2017-05-23T13:48:32.000Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://andyyoung01.github.io/tags/Docker/</loc>
+        <lastmod>2017-06-05T04:06:18.250Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>

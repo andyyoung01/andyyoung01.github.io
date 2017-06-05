@@ -7,6 +7,14 @@
     </url>
 
     <url>
+        <loc>https://andyyoung01.github.io/2016/10/10/%E4%BD%BF%E7%94%A8TLS%E5%8A%A0%E5%AF%86Docker%E7%9A%84API/</loc>
+        <lastmod>2017-06-05T04:06:18.250Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://andyyoung01.github.io/2017/05/23/Bash%E4%B8%AD%E7%9A%84typeset%E5%92%8Cdeclare/</loc>
         <lastmod>2017-05-23T13:48:32.000Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -433,14 +441,6 @@
     <url>
         <loc>https://andyyoung01.github.io/2016/10/12/salt%E7%9A%84%E5%AE%89%E8%A3%85%E5%92%8C%E9%85%8D%E7%BD%AE/</loc>
         <lastmod>2016-10-12T13:05:57.953Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://andyyoung01.github.io/2016/10/10/%E4%BD%BF%E7%94%A8TLS%E5%8A%A0%E5%AF%86Docker%E7%9A%84API/</loc>
-        <lastmod>2016-10-10T12:33:46.113Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
