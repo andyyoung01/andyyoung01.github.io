@@ -149,13 +149,6 @@
     </url>
 
     <url>
-        <loc>https://andyyoung01.github.io/tags/ELK/</loc>
-        <lastmod>2016-11-17T12:57:05.126Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://andyyoung01.github.io/tags/Apache-mesos/</loc>
         <lastmod>2016-11-23T11:09:14.653Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -268,13 +261,6 @@
     </url>
 
     <url>
-        <loc>https://andyyoung01.github.io/tags/Linux/</loc>
-        <lastmod>2017-03-29T14:00:10.000Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://andyyoung01.github.io/tags/git-flow/</loc>
         <lastmod>2017-03-30T13:26:54.000Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -331,13 +317,6 @@
     </url>
 
     <url>
-        <loc>https://andyyoung01.github.io/tags/Docker/</loc>
-        <lastmod>2017-06-25T12:38:54.000Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://andyyoung01.github.io/tags/Rancher/</loc>
         <lastmod>2017-06-25T12:38:54.000Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -347,6 +326,27 @@
     <url>
         <loc>https://andyyoung01.github.io/tags/Kubernetes/</loc>
         <lastmod>2017-06-25T12:38:54.000Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://andyyoung01.github.io/tags/Docker/</loc>
+        <lastmod>2017-07-03T13:16:01.551Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://andyyoung01.github.io/tags/ELK/</loc>
+        <lastmod>2017-07-03T13:16:01.551Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://andyyoung01.github.io/tags/Linux/</loc>
+        <lastmod>2017-07-31T13:12:31.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
